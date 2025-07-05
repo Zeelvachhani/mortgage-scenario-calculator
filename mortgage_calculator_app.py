@@ -1,69 +1,35 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 
-st.set_page_config(page_title="Mortgage Scenario Calculator", layout="wide")
-st.title("\U0001F3E1 Mortgage Scenario Calculator")
-st.markdown("Enter your mortgage parameters below. Results will appear on the right.")
+st.set_page_config(page_title="Mortgage Scenario Dashboard", layout="wide")
 
-left_col, right_col = st.columns([1.8, 4])
+# --- Sidebar inputs ---
+st.sidebar.title("🏠 Mortgage Parameters")
 
-# --- Helper input functions ---
-def labeled_number_input(label, key, required=True, **kwargs):
-    label_suffix = ' <span style="color:red;">*</span>' if required else ''
-    col1, col2 = st.columns([2, 3], gap="small")
-    col1.markdown(f"**{label}{label_suffix}**", unsafe_allow_html=True)
-    return col2.number_input("", key=key, **kwargs)
+home_price = st.sidebar.number_input("Home Price $:", min_value=0.0, step=10000.0, value=300000.0)
+hoa = st.sidebar.number_input("HOA $:", min_value=0.0, step=10.0, value=200.0)
+property_tax_rate = st.sidebar.number_input("Property Tax %:", min_value=0.0, step=0.1, value=1.2) / 100
+insurance_rate = st.sidebar.number_input("Insurance %:", min_value=0.0, step=0.1, value=0.5) / 100
+pmi_rate = st.sidebar.number_input("PMI %:", min_value=0.0, step=0.1, value=0.5) / 100
 
-def labeled_text_input(label, key, required=True):
-    label_suffix = ' <span style="color:red;">*</span>' if required else ''
-    col1, col2 = st.columns([2, 3], gap="small")
-    col1.markdown(f"**{label}{label_suffix}**", unsafe_allow_html=True)
-    return col2.text_input("", key=key)
+cash_available = st.sidebar.number_input("Cash Available $:", min_value=0.0, step=10000.0, value=80000.0)
+min_down_pct = st.sidebar.number_input("Min Down Payment %:", min_value=0.0, max_value=100.0, value=5.0) / 100
+max_down_pct = st.sidebar.number_input("Max Down Payment %:", min_value=0.0, max_value=100.0, value=20.0) / 100
 
-# --- LEFT: Inputs ---
-with left_col:
-    st.subheader("\U0001F4DD Input Parameters")
+interest_rate_base = st.sidebar.number_input("Interest Rate %:", min_value=0.0, step=0.01, value=4.0) / 100
+loan_term = st.sidebar.number_input("Loan Term (Years):", min_value=1, max_value=40, value=30)
 
-    home_price = labeled_number_input("Home Price $:", "home_price", min_value=0.0, step=10000.0)
-    hoa = labeled_number_input("HOA $:", "hoa", min_value=0.0, step=10.0)
-    property_tax_rate = labeled_number_input("Property Tax %:", "tax", min_value=0.0, step=0.1) / 100
-    insurance_rate = labeled_number_input("Insurance %:", "insurance", min_value=0.0, step=0.1) / 100
-    pmi_rate = labeled_number_input("PMI %:", "pmi", min_value=0.0, step=0.1) / 100
+monthly_liability = st.sidebar.number_input("Monthly Liability $:", min_value=0.0, step=100.0, value=500.0)
+annual_income = st.sidebar.number_input("Annual Income $:", min_value=0.0, step=10000.0, value=85000.0)
+max_dti = st.sidebar.number_input("Max DTI %:", min_value=0.0, max_value=100.0, step=1.0, value=36.0) / 100
+max_monthly_expense = st.sidebar.number_input("Max Monthly Expense $ (Optional):", min_value=0.0, step=100.0, value=0.0)
+max_monthly_expense = max_monthly_expense if max_monthly_expense > 0 else None
 
-    cash_available = labeled_number_input("Cash Available $:", "cash", min_value=0.0, step=10000.0)
-    min_down_str = labeled_text_input("Min Down Payment %:", "min_dp", required=False)
-    max_down_str = labeled_text_input("Max Down Payment %:", "max_dp", required=False)
-    interest_rate_base = labeled_number_input("Interest Rate %:", "rate", min_value=0.0, step=0.01) / 100
-    loan_term = int(labeled_number_input("Loan Term (Years):", "term", min_value=1, step=1, value=30))
+calculate = st.sidebar.button("🔄 Calculate Scenarios")
 
-    monthly_liability = labeled_number_input("Monthly Liability $:", "liability", min_value=0.0, step=100.0)
-    annual_income = labeled_number_input("Annual Income $:", "income", min_value=0.0, step=10000.0)
-    max_dti = labeled_number_input("Max DTI %:", "dti", min_value=0.0, max_value=100.0, step=1.0) / 100
-    max_monthly_expense_str = labeled_text_input("Max Monthly Expense $:", "max_exp", required=False)
-
-    calculate = st.button("\U0001F504 Calculate Scenarios")
-
-# --- Validate optional text inputs ---
-try:
-    min_down_pct = float(min_down_str) / 100 if min_down_str else 0.0
-except:
-    st.warning("Min Down Payment % must be a number.")
-    min_down_pct = 0.0
-
-try:
-    max_down_pct = float(max_down_str) / 100 if max_down_str else 1.0
-except:
-    st.warning("Max Down Payment % must be a number.")
-    max_down_pct = 1.0
-
-try:
-    max_monthly_expense = float(max_monthly_expense_str.replace(',', '')) if max_monthly_expense_str else None
-except:
-    st.warning("Max Monthly Expense must be a number.")
-    max_monthly_expense = None
-
-# --- Calculation logic ---
+# --- Helper function ---
 def calculate_monthly_payment(loan_amount, interest_rate, years):
     r = interest_rate / 12
     n = years * 12
@@ -71,93 +37,106 @@ def calculate_monthly_payment(loan_amount, interest_rate, years):
         return loan_amount / n
     return loan_amount * r * (1 + r) ** n / ((1 + r) ** n - 1)
 
-# --- RIGHT: Results ---
-with right_col:
-    if calculate:
-        monthly_income = annual_income / 12 if annual_income > 0 else 1  # avoid div by zero
-        results = []
+# --- Main ---
+st.title("🏡 Mortgage Scenario Dashboard")
 
-        for points in range(0, 11):
-            discount = points * 0.0025
-            adjusted_rate = interest_rate_base - discount
+if calculate:
+    monthly_income = annual_income / 12 if annual_income > 0 else 1
+    results = []
 
-            for dp_pct in np.arange(min_down_pct, max_down_pct + 0.01, 0.01):
-                down_payment = home_price * dp_pct
-                loan_amt = home_price - down_payment
-                closing_cost = loan_amt * (points * 0.01)
-                total_cash = down_payment + closing_cost
+    for points in range(0, 11):  # Discount points 0 to 10
+        discount = points * 0.0025
+        adjusted_rate = interest_rate_base - discount
 
-                if total_cash > cash_available:
-                    continue
+        for dp_pct in np.arange(min_down_pct, max_down_pct + 0.005, 0.005):
+            down_payment = home_price * dp_pct
+            loan_amt = home_price - down_payment
+            closing_cost = loan_amt * (points * 0.01)
+            total_cash = down_payment + closing_cost
 
-                principal_interest = calculate_monthly_payment(loan_amt, adjusted_rate, loan_term)
-                property_tax = (home_price * property_tax_rate) / 12
-                insurance = home_price * insurance_rate / 12
-                pmi = (loan_amt * pmi_rate / 12) if dp_pct < 0.20 else 0
-                total_monthly = principal_interest + property_tax + hoa + insurance + pmi
-                dti = (total_monthly + monthly_liability) / monthly_income
+            if total_cash > cash_available:
+                continue
 
-                if (max_monthly_expense is None or total_monthly <= max_monthly_expense) and dti <= max_dti:
-                    results.append({
-                        "Home Price $": round(home_price),
-                        "Down %": f"{dp_pct * 100:.1f}%",
-                        "Down $": round(down_payment),
-                        "Loan Amount $": round(loan_amt),
-                        "Interest Rate %": f"{adjusted_rate * 100:.3f}%",
-                        "Discount Points": points,
-                        "Closing Cost $": round(closing_cost),
-                        "PMI $": f"{pmi:.2f}",
-                        "Total Cash Used $": round(total_cash),
-                        "Monthly P&I $": f"{principal_interest:.2f}",
-                        "Total Monthly $": f"{total_monthly:.2f}",
-                        "DTI %": f"{dti * 100:.2f}"
-                    })
+            principal_interest = calculate_monthly_payment(loan_amt, adjusted_rate, loan_term)
+            property_tax = (home_price * property_tax_rate) / 12
+            insurance = home_price * insurance_rate / 12
+            pmi = (loan_amt * pmi_rate / 12) if dp_pct < 0.20 else 0
+            total_monthly = principal_interest + property_tax + hoa + insurance + pmi
+            dti = (total_monthly + monthly_liability) / monthly_income
 
-        if results:
-            st.subheader("\U0001F4D8 Results")
-            df = pd.DataFrame(results)
-            st.dataframe(df, use_container_width=True)
+            if (max_monthly_expense is None or total_monthly <= max_monthly_expense) and dti <= max_dti:
+                results.append({
+                    "Home Price $": round(home_price),
+                    "Down %": round(dp_pct * 100, 2),
+                    "Down $": round(down_payment),
+                    "Loan Amount $": round(loan_amt),
+                    "Interest Rate %": round(adjusted_rate * 100, 3),
+                    "Discount Points": points,
+                    "Closing Cost $": round(closing_cost),
+                    "PMI $": round(pmi, 2),
+                    "Total Cash Used $": round(total_cash),
+                    "Monthly P&I $": round(principal_interest, 2),
+                    "Total Monthly $": round(total_monthly, 2),
+                    "DTI %": round(dti * 100, 2)
+                })
 
-            csv = df.to_csv(index=False).encode('utf-8')
-            st.download_button(
-                label="\U0001F4E5 Download as CSV",
-                data=csv,
-                file_name="mortgage_scenarios.csv",
-                mime="text/csv"
-            )
+    if results:
+        df = pd.DataFrame(results)
 
-            st.subheader("\U0001F4D8 How Calculations Work")
-            st.markdown("""
-            **How Monthly P&I is Calculated:**
+        # --- Summary Cards ---
+        best_payment = df.loc[df["Total Monthly $"].idxmin()]
+        best_dti = df.loc[df["DTI %"].idxmin()]
+        best_cash = df.loc[df["Total Cash Used $"].idxmin()]
 
-            The **Principal & Interest (P&I)** part of your mortgage payment is calculated based on the following:
+        col1, col2, col3 = st.columns(3)
+        col1.metric("💰 Lowest Monthly Payment", f"${best_payment['Total Monthly $']:,}")
+        col2.metric("📉 Best Debt-to-Income Ratio", f"{best_dti['DTI %']:.2f}%")
+        col3.metric("💵 Lowest Total Cash Used", f"${best_cash['Total Cash Used $']:,}")
 
-            1. **Loan Amount** (P) = The total amount you're borrowing.
-            2. **Monthly Interest Rate** (r) = The annual interest rate divided by 12.
-            3. **Number of Payments** (n) = The number of months in your loan term (e.g., for a 30-year loan, it’s 360 months).
+        # --- Interactive Data Table ---
+        st.subheader("📊 Scenario Results")
+        st.dataframe(df.style.format({
+            "Home Price $": "${:,.0f}",
+            "Down $": "${:,.0f}",
+            "Loan Amount $": "${:,.0f}",
+            "Interest Rate %": "{:.3f}%",
+            "Closing Cost $": "${:,.0f}",
+            "PMI $": "${:.2f}",
+            "Total Cash Used $": "${:,.0f}",
+            "Monthly P&I $": "${:.2f}",
+            "Total Monthly $": "${:.2f}",
+            "DTI %": "{:.2f}%",
+        }), height=400)
 
-            The formula is:
+        # --- Line Chart: Monthly Payment vs Down Payment % ---
+        st.subheader("📈 Monthly Payment vs Down Payment % by Discount Points")
+        fig, ax = plt.subplots(figsize=(10, 5))
 
-            **Monthly P&I = (Loan Amount × Monthly Interest Rate × (1 + Monthly Interest Rate) ^ Number of Payments) ÷ ((1 + Monthly Interest Rate) ^ Number of Payments - 1)**
+        for points in df["Discount Points"].unique():
+            subset = df[df["Discount Points"] == points]
+            ax.plot(subset["Down %"], subset["Total Monthly $"], marker='o', label=f"{points} points")
 
-            ### Example:
-            - Borrowing $200,000 at 5% for 30 years gives a monthly P&I of ~$1,073.
+        ax.set_xlabel("Down Payment %")
+        ax.set_ylabel("Total Monthly Payment $")
+        ax.set_title("Monthly Payment vs Down Payment %")
+        ax.legend(title="Discount Points")
+        ax.grid(True)
+        st.pyplot(fig)
 
-            **Discount Points:**
-            - Each point equals 1% of your loan amount. More points = lower interest.
+        # --- Download button ---
+        csv = df.to_csv(index=False).encode('utf-8')
+        st.download_button(
+            label="⬇️ Download Scenarios as CSV",
+            data=csv,
+            file_name="mortgage_scenarios.csv",
+            mime="text/csv"
+        )
 
-            **Closing Costs:**
-            - Estimated as a percentage of the loan amount.
+    else:
+        st.warning("No valid scenarios found based on your input.")
 
-            **DTI (Debt-to-Income Ratio):**
-            - DTI = (Total Monthly Payments + Monthly Liabilities) ÷ Monthly Income
-
-            **Total Monthly Payment:**
-            - Includes P&I, taxes, insurance, HOA, and PMI (if applicable).
-            """)
-
-        else:
-            st.warning("No valid scenarios found based on your input.")
+else:
+    st.info("Adjust parameters in the sidebar and click 'Calculate Scenarios' to view results.")
 
 # --- Footer ---
 st.markdown("---")
