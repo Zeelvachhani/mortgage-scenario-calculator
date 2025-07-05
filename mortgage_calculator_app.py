@@ -12,27 +12,22 @@ left_col, right_col = st.columns([1, 2])
 with left_col:
     st.subheader("📅 Input Parameters")
 
-    def labeled_input(label, key=None, **kwargs):
-        col1, col2 = st.columns([0.35, 0.65])
-        col1.markdown(f"**{label}**")
-        return col2.text_input("", key=key, **kwargs)
+    home_price = st.number_input("Home Price $:", key="home_price", min_value=0.0, step=1000.0)
+    hoa = st.number_input("HOA $:", key="hoa", min_value=0.0, step=10.0)
+    property_tax_rate = st.number_input("Property Tax %:", key="tax", min_value=0.0, step=0.1) / 100
+    insurance_rate = st.number_input("Insurance %:", key="insurance", min_value=0.0, step=0.1) / 100
+    pmi_rate = st.number_input("PMI %:", key="pmi", min_value=0.0, step=0.1) / 100
 
-    home_price = float(labeled_input("Home Price $", key="home_price") or 0)
-    hoa = float(labeled_input("HOA $", key="hoa") or 0)
-    property_tax_rate = float(labeled_input("Property Tax %", key="tax") or 0) / 100
-    insurance_rate = float(labeled_input("Insurance %", key="insurance") or 0) / 100
-    pmi_rate = float(labeled_input("PMI %", key="pmi") or 0) / 100
+    cash_available = st.number_input("Cash Available $:", key="cash", min_value=0.0, step=1000.0)
+    min_down_str = st.text_input("Min Down Payment % (optional):", key="min_dp")
+    max_down_str = st.text_input("Max Down Payment % (optional):", key="max_dp")
+    interest_rate_base = st.number_input("Interest Rate %:", key="rate", min_value=0.0, step=0.01) / 100
+    loan_term = int(st.number_input("Loan Term (Years):", key="term", min_value=1, step=1, value=30))
 
-    cash_available = float(labeled_input("Cash Available $", key="cash") or 0)
-    min_down_str = labeled_input("Min Down Payment % (optional)", key="min_dp")
-    max_down_str = labeled_input("Max Down Payment % (optional)", key="max_dp")
-    interest_rate_base = float(labeled_input("Interest Rate %", key="rate") or 0) / 100
-    loan_term = int(float(labeled_input("Loan Term (Years)", key="term") or 30))
-
-    monthly_liability = float(labeled_input("Monthly Liability $", key="liability") or 0)
-    annual_income = float(labeled_input("Annual Income $", key="income") or 0)
-    max_dti = float(labeled_input("Max DTI %", key="dti") or 0) / 100
-    max_monthly_expense_str = labeled_input("Max Monthly Expense $ (optional)", key="max_exp")
+    monthly_liability = st.number_input("Monthly Liability $:", key="liability", min_value=0.0, step=100.0)
+    annual_income = st.number_input("Annual Income $:", key="income", min_value=0.0, step=1000.0)
+    max_dti = st.number_input("Max DTI %:", key="dti", min_value=0.0, max_value=100.0, step=1.0) / 100
+    max_monthly_expense_str = st.text_input("Max Monthly Expense $ (optional):", key="max_exp")
 
     calculate = st.button("🔍 Calculate Scenarios")
 
