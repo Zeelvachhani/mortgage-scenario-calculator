@@ -3,46 +3,54 @@ import pandas as pd
 import numpy as np
 
 st.set_page_config(page_title="Mortgage Scenario Calculator", layout="wide")
-st.title("\U0001F3E1 Mortgage Scenario Calculator")
+st.title("🏠 Mortgage Scenario Calculator")
 st.markdown("Enter your mortgage parameters below. Results will appear on the right.")
 
 left_col, right_col = st.columns([1.5, 4])
 
-# --- Helper input functions with required flag ---
-def inline_number_input(label, key, required=True, **kwargs):
-    col1, col2 = st.columns([2.5, 2.5], gap="small")
-    label_html = f"<label style='font-weight:600;'>{label}{' <span style=\"color:red;\">*</span>' if required else ''}</label>"
-    col1.markdown(label_html, unsafe_allow_html=True)
-    return col2.number_input("", key=key, **kwargs)
-
-def inline_text_input(label, key, required=True):
-    col1, col2 = st.columns([2.5, 2.5], gap="small")
-    label_html = f"<label style='font-weight:600;'>{label}{' <span style=\"color:red;\">*</span>' if required else ''}</label>"
-    col1.markdown(label_html, unsafe_allow_html=True)
-    return col2.text_input("", key=key)
+# --- Custom Inline Input ---
+def inline_input(label, key, input_type="number", required=True, placeholder="", value=""):
+    star = " <span style='color:red;'>*</span>" if required else ""
+    input_html = f"""
+    <div style="display:flex; align-items:center; margin-bottom:10px;">
+        <label for="{key}" style="min-width:180px; font-weight:600;">{label}{star}</label>
+        <input id="{key}" name="{key}" type="{input_type}" step="any"
+               style="flex:1; padding:6px; border:1px solid #ccc; border-radius:4px;"
+               placeholder="{placeholder}" value="{value}" />
+    </div>
+    <script>
+        const el = window.document.getElementById("{key}");
+        if (el) {{
+            el.addEventListener("change", function() {{
+                window.parent.postMessage({{ isStreamlitMessage: true, type: "streamlit:setComponentValue", key: "{key}", value: el.value }}, "*");
+            }});
+        }}
+    </script>
+    """
+    return st.markdown(input_html, unsafe_allow_html=True)
 
 # --- LEFT: Inputs ---
 with left_col:
-    st.subheader("\U0001F4DD Input Parameters")
+    st.subheader("📝 Input Parameters")
 
-    home_price = inline_number_input("Home Price $:", "home_price", min_value=0.0, step=10000.0)
-    hoa = inline_number_input("HOA $:", "hoa", min_value=0.0, step=10.0)
-    property_tax_rate = inline_number_input("Property Tax %:", "tax", min_value=0.0, step=0.1) / 100
-    insurance_rate = inline_number_input("Insurance %:", "insurance", min_value=0.0, step=0.1) / 100
-    pmi_rate = inline_number_input("PMI %:", "pmi", min_value=0.0, step=0.1) / 100
+    home_price = st.number_input("Home Price $", key="home_price", min_value=0.0, step=10000.0)
+    hoa = st.number_input("HOA $", key="hoa", min_value=0.0, step=10.0)
+    property_tax_rate = st.number_input("Property Tax %", key="tax", min_value=0.0, step=0.1) / 100
+    insurance_rate = st.number_input("Insurance %", key="insurance", min_value=0.0, step=0.1) / 100
+    pmi_rate = st.number_input("PMI %", key="pmi", min_value=0.0, step=0.1) / 100
 
-    cash_available = inline_number_input("Cash Available $:", "cash", min_value=0.0, step=10000.0)
-    min_down_str = inline_text_input("Min Down Payment %:", "min_dp", required=False)
-    max_down_str = inline_text_input("Max Down Payment %:", "max_dp", required=False)
-    interest_rate_base = inline_number_input("Interest Rate %:", "rate", min_value=0.0, step=0.01) / 100
-    loan_term = int(inline_number_input("Loan Term (Years):", "term", min_value=1, step=1, value=30))
+    cash_available = st.number_input("Cash Available $", key="cash", min_value=0.0, step=10000.0)
+    min_down_str = st.text_input("Min Down Payment %", key="min_dp")
+    max_down_str = st.text_input("Max Down Payment %", key="max_dp")
+    interest_rate_base = st.number_input("Interest Rate %", key="rate", min_value=0.0, step=0.01) / 100
+    loan_term = int(st.number_input("Loan Term (Years)", key="term", min_value=1, step=1, value=30))
 
-    monthly_liability = inline_number_input("Monthly Liability $:", "liability", min_value=0.0, step=100.0)
-    annual_income = inline_number_input("Annual Income $:", "income", min_value=0.0, step=10000.0)
-    max_dti = inline_number_input("Max DTI %:", "dti", min_value=0.0, max_value=100.0, step=1.0) / 100
-    max_monthly_expense_str = inline_text_input("Max Monthly Expense $:", "max_exp", required=False)
+    monthly_liability = st.number_input("Monthly Liability $", key="liability", min_value=0.0, step=100.0)
+    annual_income = st.number_input("Annual Income $", key="income", min_value=0.0, step=10000.0)
+    max_dti = st.number_input("Max DTI %", key="dti", min_value=0.0, max_value=100.0, step=1.0) / 100
+    max_monthly_expense_str = st.text_input("Max Monthly Expense $", key="max_exp")
 
-    calculate = st.button("\U0001F504 Calculate Scenarios")
+    calculate = st.button("🔄 Calculate Scenarios")
 
 # --- Validate optional text inputs ---
 try:
@@ -112,19 +120,19 @@ with right_col:
                     })
 
         if results:
-            st.subheader("\U0001F4D8 Results")
+            st.subheader("📘 Results")
             df = pd.DataFrame(results)
             st.dataframe(df, use_container_width=True)
 
             csv = df.to_csv(index=False).encode('utf-8')
             st.download_button(
-                label="\U0001F4E5 Download as CSV",
+                label="📥 Download as CSV",
                 data=csv,
                 file_name="mortgage_scenarios.csv",
                 mime="text/csv"
             )
 
-            st.subheader("\U0001F4D8 How Calculations Work")
+            st.subheader("📘 How Calculations Work")
             st.markdown("""
             **How Monthly P&I is Calculated:**
 
@@ -136,7 +144,7 @@ with right_col:
 
             The formula is:
 
-            **Monthly P&I = (Loan Amount × Monthly Interest Rate × (1 + Monthly Interest Rate) ^ Number of Payments) ÷ ((1 + Monthly Interest Rate) ^ Number of Payments - 1)**
+            **Monthly P&I = (P × r × (1 + r)^n) ÷ ((1 + r)^n - 1)**
 
             ### Example:
             - Borrowing $200,000 at 5% for 30 years gives a monthly P&I of ~$1,073.
