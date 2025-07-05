@@ -97,6 +97,19 @@ with right_col:
                     })
 
         if results:
+            st.subheader("📘 Results")
+            df = pd.DataFrame(results)
+            st.dataframe(df, use_container_width=True)
+
+            csv = df.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label="📥 Download as CSV",
+                data=csv,
+                file_name="mortgage_scenarios.csv",
+                mime="text/csv"
+            )
+
+            # Now placing the calculations explanation at the bottom
             st.subheader("📘 How Calculations Work")
             st.markdown("""
             **Key Formulas Used:**
@@ -108,16 +121,6 @@ with right_col:
             - **Closing Costs** = Loan Amount × Discount Points × 1%
             """)
 
-            df = pd.DataFrame(results)
-            st.dataframe(df, use_container_width=True)
-
-            csv = df.to_csv(index=False).encode('utf-8')
-            st.download_button(
-                label="📥 Download as CSV",
-                data=csv,
-                file_name="mortgage_scenarios.csv",
-                mime="text/csv"
-            )
         else:
             st.warning("No valid scenarios found based on your input.")
 
