@@ -62,7 +62,7 @@ if calculate and all(field is not None and field > 0 for field in required_field
 
     results = []
 
-    for points in range(0, 11):  # Discount points 0 to 10
+    for points in range(0, 20):  # Discount points 0 to 10
         discount = points * 0.0025
         adjusted_rate = interest_rate_base / 100 - discount
 
@@ -118,9 +118,9 @@ if calculate and all(field is not None and field > 0 for field in required_field
         st.subheader("📊 Scenario Results")
         st.dataframe(df.style.format({
             "Home Price $": "${:,.0f}",
-            "Down $": "${:,.0f}",
+            "Down $": "${:,.2f}",
             "Loan Amount $": "${:,.0f}",
-            "Interest Rate %": "{:.3f}%",
+            "Interest Rate %": "{:.2f}%",
             "Closing Cost $": "${:,.0f}",
             "PMI $": "${:.2f}",
             "Total Cash Used $": "${:,.0f}",
