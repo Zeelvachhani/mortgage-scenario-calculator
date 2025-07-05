@@ -9,21 +9,16 @@ st.markdown("Enter your mortgage parameters below. Results will appear on the ri
 left_col, right_col = st.columns([1.5, 4])
 
 # --- Helper input functions ---
-def inline_number_input(label, key, required=True, **kwargs):
-    col1, col2 = st.columns([1.5, 3.5])
-    label_with_required = f"{label} <span style='color:red;'>*</span>" if required else label
-    with col1:
-        st.markdown(f"<div style='line-height:38px; font-weight:600;'>{label_with_required}</div>", unsafe_allow_html=True)
-    with col2:
-        return st.number_input(label="", key=key, **kwargs)
+def labeled_number_input(label, key, required=True, **kwargs):
+    label_suffix = ' <span style="color:red;">*</span>' if required else ''
+    st.markdown(f"**{label}{label_suffix}**", unsafe_allow_html=True)
+    return st.number_input("", key=key, **kwargs)
 
-def inline_text_input(label, key, required=True):
-    col1, col2 = st.columns([1.5, 3.5])
-    label_with_required = f"{label} <span style='color:red;'>*</span>" if required else label
-    with col1:
-        st.markdown(f"<div style='line-height:38px; font-weight:600;'>{label_with_required}</div>", unsafe_allow_html=True)
-    with col2:
-        return st.text_input(label="", key=key)
+def labeled_text_input(label, key, required=True):
+    label_suffix = ' <span style="color:red;">*</span>' if required else ''
+    st.markdown(f"**{label}{label_suffix}**", unsafe_allow_html=True)
+    return st.text_input("", key=key)
+
 
 # --- LEFT: Inputs ---
 with left_col:
