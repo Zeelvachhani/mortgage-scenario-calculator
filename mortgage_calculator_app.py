@@ -3,33 +3,47 @@ import pandas as pd
 import numpy as np
 
 st.set_page_config(page_title="Mortgage Scenario Calculator", layout="wide")
-st.title("🏡 Mortgage Scenario Calculator")
+st.title("\U0001F3E1 Mortgage Scenario Calculator")
 st.markdown("Enter your mortgage parameters below. Results will appear on the right.")
 
-left_col, right_col = st.columns([2, 3])  # Adjusted column width
+left_col, right_col = st.columns([1.5, 4])  # Adjusted column width
+
+def inline_number_input(label, key, **kwargs):
+    col1, col2 = st.columns([1, 2])
+    with col1:
+        st.markdown(f"**{label}**")
+    with col2:
+        return st.number_input(label="", key=key, **kwargs)
+
+def inline_text_input(label, key):
+    col1, col2 = st.columns([1, 2])
+    with col1:
+        st.markdown(f"**{label}**")
+    with col2:
+        return st.text_input(label="", key=key)
 
 # --- LEFT: Inputs ---
 with left_col:
-    st.subheader("📝 Input Parameters")
+    st.subheader("\U0001F4DD Input Parameters")
 
-    home_price = st.number_input("Home Price $:", key="home_price", min_value=0.0, step=1000.0)
-    hoa = st.number_input("HOA $:", key="hoa", min_value=0.0, step=10.0)
-    property_tax_rate = st.number_input("Property Tax %:", key="tax", min_value=0.0, step=0.1) / 100
-    insurance_rate = st.number_input("Insurance %:", key="insurance", min_value=0.0, step=0.1) / 100
-    pmi_rate = st.number_input("PMI %:", key="pmi", min_value=0.0, step=0.1) / 100
+    home_price = inline_number_input("Home Price $:", "home_price", min_value=0.0, step=1000.0)
+    hoa = inline_number_input("HOA $:", "hoa", min_value=0.0, step=10.0)
+    property_tax_rate = inline_number_input("Property Tax %:", "tax", min_value=0.0, step=0.1) / 100
+    insurance_rate = inline_number_input("Insurance %:", "insurance", min_value=0.0, step=0.1) / 100
+    pmi_rate = inline_number_input("PMI %:", "pmi", min_value=0.0, step=0.1) / 100
 
-    cash_available = st.number_input("Cash Available $:", key="cash", min_value=0.0, step=1000.0)
-    min_down_str = st.text_input("Min Down Payment % (optional):", key="min_dp")
-    max_down_str = st.text_input("Max Down Payment % (optional):", key="max_dp")
-    interest_rate_base = st.number_input("Interest Rate %:", key="rate", min_value=0.0, step=0.01) / 100
-    loan_term = int(st.number_input("Loan Term (Years):", key="term", min_value=1, step=1, value=30))
+    cash_available = inline_number_input("Cash Available $:", "cash", min_value=0.0, step=1000.0)
+    min_down_str = inline_text_input("Min Down Payment % (optional):", "min_dp")
+    max_down_str = inline_text_input("Max Down Payment % (optional):", "max_dp")
+    interest_rate_base = inline_number_input("Interest Rate %:", "rate", min_value=0.0, step=0.01) / 100
+    loan_term = int(inline_number_input("Loan Term (Years):", "term", min_value=1, step=1, value=30))
 
-    monthly_liability = st.number_input("Monthly Liability $:", key="liability", min_value=0.0, step=100.0)
-    annual_income = st.number_input("Annual Income $:", key="income", min_value=0.0, step=1000.0)
-    max_dti = st.number_input("Max DTI %:", key="dti", min_value=0.0, max_value=100.0, step=1.0) / 100
-    max_monthly_expense_str = st.text_input("Max Monthly Expense $ (optional):", key="max_exp")
+    monthly_liability = inline_number_input("Monthly Liability $:", "liability", min_value=0.0, step=100.0)
+    annual_income = inline_number_input("Annual Income $:", "income", min_value=0.0, step=1000.0)
+    max_dti = inline_number_input("Max DTI %:", "dti", min_value=0.0, max_value=100.0, step=1.0) / 100
+    max_monthly_expense_str = inline_text_input("Max Monthly Expense $ (optional):", "max_exp")
 
-    calculate = st.button("🔄 Calculate Scenarios")
+    calculate = st.button("\U0001F504 Calculate Scenarios")
 
 try:
     min_down_pct = float(min_down_str) / 100 if min_down_str else 0.0
@@ -97,20 +111,19 @@ with right_col:
                     })
 
         if results:
-            st.subheader("📘 Results")
+            st.subheader("\U0001F4D8 Results")
             df = pd.DataFrame(results)
             st.dataframe(df, use_container_width=True)
 
             csv = df.to_csv(index=False).encode('utf-8')
             st.download_button(
-                label="📥 Download as CSV",
+                label="\U0001F4E5 Download as CSV",
                 data=csv,
                 file_name="mortgage_scenarios.csv",
                 mime="text/csv"
             )
 
-            # Now placing the calculations explanation at the bottom
-            st.subheader("📘 How Calculations Work")
+            st.subheader("\U0001F4D8 How Calculations Work")
             st.markdown("""
             **How Monthly P&I is Calculated:**
 
@@ -131,8 +144,6 @@ with right_col:
 
             ### Example:
             - If you're borrowing $200,000 with a 5% annual interest rate and a 30-year loan, your monthly P&I payment will be calculated using this method.
-          
-            In simpler terms: the higher your loan amount, interest rate, or the longer your loan term, the higher your monthly payment will be.
 
             **Discount Points:**
             - Discount points are a form of prepaid interest. Each point equals 1% of your loan amount.
@@ -145,11 +156,9 @@ with right_col:
             **DTI (Debt-to-Income Ratio):**
             - This ratio is used by lenders to determine how much of your monthly income goes toward paying your debts.
             - The formula is: **DTI = (Total Monthly Payments + Monthly Liabilities) ÷ Monthly Income**
-            - A lower DTI is preferable, as it shows you have more disposable income to cover additional expenses.
 
             **Total Monthly Payment:**
             - This includes your principal and interest (P&I), plus other costs like property taxes, insurance, HOA fees, and PMI (if applicable).
-            - This is the total amount you pay each month for your mortgage and related expenses.
             """)
 
         else:
