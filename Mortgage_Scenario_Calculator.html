@@ -6,20 +6,22 @@ st.set_page_config(page_title="Mortgage Scenario Calculator", layout="wide")
 st.title("\U0001F3E1 Mortgage Scenario Calculator")
 st.markdown("Enter your mortgage parameters below. Results will appear on the right.")
 
-left_col, right_col = st.columns([1.8, 4])
+left_col, right_col = st.columns([2, 4])
 
-# --- Helper input functions ---
+# --- Helper function to show label + input vertically with spacing ---
 def labeled_number_input(label, key, required=True, **kwargs):
     label_suffix = ' <span style="color:red;">*</span>' if required else ''
-    col1, col2 = st.columns([2, 3], gap="small")
-    col1.markdown(f"**{label}{label_suffix}**", unsafe_allow_html=True)
-    return col2.number_input("", key=key, **kwargs)
+    st.markdown(f"**{label}{label_suffix}**", unsafe_allow_html=True)
+    value = st.number_input("", key=key, **kwargs)
+    st.write("")  # spacer
+    return value
 
 def labeled_text_input(label, key, required=True):
     label_suffix = ' <span style="color:red;">*</span>' if required else ''
-    col1, col2 = st.columns([2, 3], gap="small")
-    col1.markdown(f"**{label}{label_suffix}**", unsafe_allow_html=True)
-    return col2.text_input("", key=key)
+    st.markdown(f"**{label}{label_suffix}**", unsafe_allow_html=True)
+    value = st.text_input("", key=key)
+    st.write("")  # spacer
+    return value
 
 # --- LEFT: Inputs ---
 with left_col:
@@ -74,7 +76,7 @@ def calculate_monthly_payment(loan_amount, interest_rate, years):
 # --- RIGHT: Results ---
 with right_col:
     if calculate:
-        monthly_income = annual_income / 12 if annual_income > 0 else 1  # avoid div by zero
+        monthly_income = annual_income / 12 if annual_income > 0 else 1
         results = []
 
         for points in range(0, 11):
