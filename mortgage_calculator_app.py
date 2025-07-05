@@ -93,14 +93,23 @@ if st.button("Calculate Scenarios"):
                     "Total Cash Used $": round(total_cash),
                     "Monthly P&I $": f"{principal_interest:.2f}",
                     "Total Monthly $": f"{total_monthly:.2f}",
-                    "DTI %": f"{dti * 100:.2f}"
+                    "DTI %": f"{dti * 100:.2f}",
+                    "Details": {
+                        "dp_pct": dp_pct,
+                        "adjusted_rate": adjusted_rate,
+                        "principal_interest": principal_interest,
+                        "property_tax": property_tax,
+                        "insurance": insurance,
+                        "pmi": pmi,
+                        "dti": dti,
+                        "total_monthly": total_monthly
+                    }
                 })
 
     if results:
-        df = pd.DataFrame(results)
+        df = pd.DataFrame(results).drop(columns="Details")
         st.dataframe(df, use_container_width=True)
 
-        # Download option
         csv = df.to_csv(index=False).encode('utf-8')
         st.download_button(
             label="📥 Download results as Excel (CSV)",
@@ -109,20 +118,37 @@ if st.button("Calculate Scenarios"):
             mime="text/csv"
         )
 
-
-
+        # Show calculation breakdowns
+        st.subheader("📘 Detailed Calculation Explanation")
+        for i, r in enumerate(results[:10]):  # show top 10 results with details
+            with st.expander(f"📄 Scenario {i+1}: {r['Down %']} down, {r['Interest Rate %']}"):
+                d = r["Details"]
+                st.markdown(f"""
+                **Home Price:** ${home_price:,.0f}  
+                **Down Payment ({r['Down %']}):** ${r['Down $']:,.0f}  
+                **Loan Amount:** ${r['Loan Amount $']:,.0f}  
+                **Interest Rate (after {r['Discount Points']} points):** {r['Interest Rate %']}  
+                **Closing Cost:** ${r['Closing Cost $']:,.0f}  
+                **PMI:** ${r['PMI $']}  
+                **Monthly Principal & Interest:** ${d['principal_interest']:.2f}  
+                **Property Tax:** ${d['property_tax']:.2f}  
+                **Insurance:** ${d['insurance']:.2f}  
+                **HOA:** ${hoa:.2f}  
+                **Total Monthly Payment:** ${d['total_monthly']:.2f}  
+                **Debt-to-Income (DTI):** {d['dti']*100:.2f}%
+                """)
     else:
         st.warning("No valid scenarios found based on your input.")
-        
-# Footer section with signature and disclaimer
+
+# Footer with signature and disclaimer
 st.markdown("---")
 st.markdown(
-            """
-            <div style="text-align: center; font-size: 14px;">
-                <p>✨ Crafted with care by <strong>Zeel Vachhani</strong> ✨</p>
-                <p>© 2025 Zeel Vachhani. All rights reserved.</p>
-                <p><em>This tool is for informational purposes only and should not be considered financial advice.</em></p>
-            </div>
-            """,
-            unsafe_allow_html=True
-            )
+    """
+    <div style="text-align: center; font-size: 14px;">
+        <p>✨ Crafted with care by <strong>Zeel Vachhani</strong> ✨</p>
+        <p>© 2025 Zeel Vachhani. All rights reserved.</p>
+        <p><em>This tool is for informational purposes only and should not be considered financial advice.</em></p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
