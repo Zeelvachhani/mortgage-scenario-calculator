@@ -118,18 +118,18 @@ if calculate and all(field is not None and field > 0 for field in required_field
         st.subheader("📊 Scenario Results")
         st.dataframe(df.style.format({
             "Home Price $": "${:,.0f}",
-            "Down $": "${:,.2f}",
+            "Down %": "{:.2f}%",
+            "Down $": "${:,.0f}",
             "Loan Amount $": "${:,.0f}",
             "Interest Rate %": "{:.2f}%",
-            "Closing Cost $": "${:,.0f}",
+            "Closing Cost $": "${:,.2f}",
             "PMI $": "${:.2f}",
-            "Total Cash Used $": "${:,.0f}",
+            "Total Cash Used $": "${:,.2f}",
             "Monthly P&I $": "${:.2f}",
             "Total Monthly $": "${:.2f}",
             "DTI %": "{:.2f}%",
         }), height=400)
-
-        # --- Line Chart ---
+                # --- Line Chart ---
         st.subheader("📈 Monthly Payment vs Down Payment % by Discount Points")
         fig, ax = plt.subplots(figsize=(10, 5))
 
