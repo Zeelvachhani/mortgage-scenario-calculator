@@ -150,9 +150,6 @@ if calculate and all(field is not None and field > 0 for field in required_field
             mime="text/csv"
         )
 
-    else:
-        st.warning("No valid scenarios found based on your input.")
-# ... [everything above remains the same]
 
     else:
         st.warning("No valid scenarios found based on your input.")
@@ -201,15 +198,3 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-elif calculate:
-    st.error("Please fill in all required fields: Home Price, Interest Rate, Annual Income, Max DTI.")
-
-# --- Footer ---
-st.markdown("---")
-st.markdown("""
-<div style="text-align: center; font-size: 14px;">
-    <p>✨ Crafted with care by <strong>Zeel Vachhani</strong> ✨</p>
-    <p>© 2025 Zeel Vachhani. All rights reserved.</p>
-    <p><em>This tool is for informational purposes only and should not be considered financial advice.</em></p>
-</div>
-""", unsafe_allow_html=True)
