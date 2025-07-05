@@ -152,6 +152,54 @@ if calculate and all(field is not None and field > 0 for field in required_field
 
     else:
         st.warning("No valid scenarios found based on your input.")
+# ... [everything above remains the same]
+
+    else:
+        st.warning("No valid scenarios found based on your input.")
+
+    # --- Explanation section ---
+    st.subheader("📘 How Calculations Work")
+    st.markdown("""
+    **How Monthly P&I is Calculated:**
+
+    The **Principal & Interest (P&I)** part of your mortgage payment is calculated based on the following:
+
+    1. **Loan Amount** (P) = The total amount you're borrowing.
+    2. **Monthly Interest Rate** (r) = The annual interest rate divided by 12.
+    3. **Number of Payments** (n) = The number of months in your loan term (e.g., for a 30-year loan, it’s 360 months).
+
+    The formula is:
+
+    **Monthly P&I = (Loan Amount × Monthly Interest Rate × (1 + Monthly Interest Rate)^n) ÷ ((1 + Monthly Interest Rate)^n - 1)**
+
+    ### Example:
+    - Borrowing $200,000 at 5% for 30 years gives a monthly P&I of ~$1,073.
+
+    **Discount Points:**
+    - Each point equals 1% of your loan amount. More points = lower interest.
+
+    **Closing Costs:**
+    - Estimated as a percentage of the loan amount (based on discount points).
+
+    **DTI (Debt-to-Income Ratio):**
+    - DTI = (Total Monthly Payments + Monthly Liabilities) ÷ Monthly Income
+
+    **Total Monthly Payment:**
+    - Includes P&I, taxes, insurance, HOA, and PMI (if applicable).
+    """)
+
+elif calculate:
+    st.error("Please fill in all required fields: Home Price, Interest Rate, Annual Income, Max DTI.")
+
+# --- Footer ---
+st.markdown("---")
+st.markdown("""
+<div style="text-align: center; font-size: 14px;">
+    <p>✨ Crafted with care by <strong>Zeel Vachhani</strong> ✨</p>
+    <p>© 2025 Zeel Vachhani. All rights reserved.</p>
+    <p><em>This tool is for informational purposes only and should not be considered financial advice.</em></p>
+</div>
+""", unsafe_allow_html=True)
 
 elif calculate:
     st.error("Please fill in all required fields: Home Price, Interest Rate, Annual Income, Max DTI.")
