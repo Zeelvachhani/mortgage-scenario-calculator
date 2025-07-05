@@ -8,7 +8,7 @@ left_col, right_col = st.columns([1.5, 4])
 
 # --- Helper input functions ---
 def inline_number_input(label, key, required=True, **kwargs):
-    col1, col2 = st.columns([1.5, 3.5], gap="small")
+    col1, col2 = st.columns([2, 3], gap="small")  # Adjusted column widths
     asterisk = " <span style='color:red;'>*</span>" if required else ""
     col1.markdown(f"**{label}{asterisk}**", unsafe_allow_html=True)
     value = col2.number_input(label="", key=key, **kwargs)
@@ -17,7 +17,7 @@ def inline_number_input(label, key, required=True, **kwargs):
     return value
 
 def inline_text_input(label, key, required=True):
-    col1, col2 = st.columns([1.5, 3.5], gap="small")
+    col1, col2 = st.columns([2, 3], gap="small")  # Adjusted column widths
     asterisk = " <span style='color:red;'>*</span>" if required else ""
     col1.markdown(f"**{label}{asterisk}**", unsafe_allow_html=True)
     value = col2.text_input(label="", key=key)
