@@ -18,8 +18,9 @@ with col1:
 
 with col2:
     cash_available = st.number_input("Cash Available $", min_value=0.0, step=1000.0, format="%.2f")
-    min_down_pct = st.number_input("Min Down Payment %", min_value=0.0, max_value=100.0, step=1.0, format="%.1f") / 100
-    max_down_pct = st.number_input("Max Down Payment %", min_value=0.0, max_value=100.0, step=1.0, format="%.1f") / 100
+
+    min_down_str = st.text_input("Min Down Payment % (optional)", "")
+    max_down_str = st.text_input("Max Down Payment % (optional)", "")
     interest_rate_base = st.number_input("Interest Rate %", min_value=0.0, step=0.1, format="%.3f") / 100
     loan_term = st.number_input("Loan Term (Years)", min_value=1, step=1, value=30)
 
@@ -27,13 +28,34 @@ with col3:
     monthly_liability = st.number_input("Monthly Liability $", min_value=0.0, step=100.0, format="%.2f")
     annual_income = st.number_input("Annual Income $", min_value=0.0, step=1000.0, format="%.2f")
     max_dti = st.number_input("Max DTI %", min_value=0.0, max_value=100.0, step=1.0, format="%.2f") / 100
-    max_monthly_expense = st.number_input("Max Monthly Expense $", min_value=0.0, step=100.0, format="%.2f")
+    max_monthly_expense_str = st.text_input("Max Monthly Expense $ (optional)", "")
 
+# Convert optional inputs safely
+try:
+    min_down_pct = float(min_down_str) / 100 if min_down_str else 0.0
+except:
+    st.warning("Min Down Payment % must be a number.")
+    min_down_pct = 0.0
+
+try:
+    max_down_pct = float(max_down_str) / 100 if max_down_str else 1.0
+except:
+    st.warning("Max Down Payment % must be a number.")
+    max_down_pct = 1.0
+
+try:
+    max_monthly_expense = float(max_monthly_expense_str.replace(',', '')) if max_monthly_expense_str else None
+except:
+    st.warning("Max Monthly Expense must be a number.")
+    max_monthly_expense = None
+
+# Monthly payment formula
 def calculate_monthly_payment(loan_amount, interest_rate, years):
     r = interest_rate / 12
     n = years * 12
     return loan_amount * r * (1 + r) ** n / ((1 + r) ** n - 1)
 
+# Button to calculate
 if st.button("Calculate Scenarios"):
     monthly_income = annual_income / 12
     results = []
@@ -58,7 +80,7 @@ if st.button("Calculate Scenarios"):
             total_monthly = principal_interest + property_tax + hoa + insurance + pmi
             dti = (total_monthly + monthly_liability) / monthly_income
 
-            if (not max_monthly_expense or total_monthly <= max_monthly_expense) and dti <= max_dti:
+            if (max_monthly_expense is None or total_monthly <= max_monthly_expense) and dti <= max_dti:
                 results.append({
                     "Home Price $": round(home_price),
                     "Down %": f"{dp_pct * 100:.1f}%",
