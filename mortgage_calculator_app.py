@@ -6,11 +6,11 @@ st.set_page_config(page_title="Mortgage Scenario Calculator", layout="wide")
 st.title("🏡 Mortgage Scenario Calculator")
 st.markdown("Enter your mortgage parameters below. Results will appear on the right.")
 
-left_col, right_col = st.columns([1, 2])
+left_col, right_col = st.columns([2, 3])  # Adjusted column width
 
 # --- LEFT: Inputs ---
 with left_col:
-    st.subheader("📅 Input Parameters")
+    st.subheader("📝 Input Parameters")
 
     home_price = st.number_input("Home Price $:", key="home_price", min_value=0.0, step=1000.0)
     hoa = st.number_input("HOA $:", key="hoa", min_value=0.0, step=10.0)
@@ -29,7 +29,7 @@ with left_col:
     max_dti = st.number_input("Max DTI %:", key="dti", min_value=0.0, max_value=100.0, step=1.0) / 100
     max_monthly_expense_str = st.text_input("Max Monthly Expense $ (optional):", key="max_exp")
 
-    calculate = st.button("🔍 Calculate Scenarios")
+    calculate = st.button("🔄 Calculate Scenarios")
 
 try:
     min_down_pct = float(min_down_str) / 100 if min_down_str else 0.0
@@ -97,29 +97,27 @@ with right_col:
                     })
 
         if results:
-            st.subheader("📊 Best Scenarios")
-            df = pd.DataFrame(results)
-            st.dataframe(df, use_container_width=True)
-
-            csv = df.to_csv(index=False).encode('utf-8')
-            st.download_button(
-                label="📅 Download as CSV",
-                data=csv,
-                file_name="mortgage_scenarios.csv",
-                mime="text/csv"
-            )
-
-            st.subheader("\ud83d\udcd8 How Calculations Work")
+            st.subheader("📘 How Calculations Work")
             st.markdown("""
             **Key Formulas Used:**
 
-            - **Monthly P&I** = \( \frac{P \cdot r \cdot (1 + r)^n}{(1 + r)^n - 1} \)
+            - **Monthly P&I** = \\( \\frac{P \\cdot r \\cdot (1 + r)^n}{(1 + r)^n - 1} \\)
             - **Total Monthly Payment** = P&I + PMI + Insurance + Property Tax + HOA
             - **DTI** = (Total Monthly + Monthly Liabilities) / (Annual Income ÷ 12)
             - **PMI** only applies if Down Payment < 20%
             - **Closing Costs** = Loan Amount × Discount Points × 1%
             """)
 
+            df = pd.DataFrame(results)
+            st.dataframe(df, use_container_width=True)
+
+            csv = df.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label="📥 Download as CSV",
+                data=csv,
+                file_name="mortgage_scenarios.csv",
+                mime="text/csv"
+            )
         else:
             st.warning("No valid scenarios found based on your input.")
 
