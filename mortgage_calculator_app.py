@@ -109,6 +109,7 @@ if st.button("Calculate Scenarios"):
             mime="text/csv"
         )
 
+)
         # Footer section with signature and disclaimer
         st.markdown("---")
         st.markdown(
@@ -120,7 +121,6 @@ if st.button("Calculate Scenarios"):
         </div>
         """,
         unsafe_allow_html=True
-)
 
     else:
         st.warning("No valid scenarios found based on your input.")
