@@ -9,16 +9,15 @@ st.markdown("Enter your mortgage parameters below. Results will appear on the ri
 left_col, right_col = st.columns([1.5, 4])  # Adjusted column width
 
 def inline_number_input(label, key, **kwargs):
-    col1, col2 = st.columns([1, 3], gap="small")  # 1:3 gives the label enough space
-    with col1:
-        st.markdown(f"<div style='margin-top: 10px; font-weight: 600;'>{label}</div>", unsafe_allow_html=True)
+    col1, col2 = st.columns([1.5, 2.5], gap="small")  # Label column slightly narrower
+    col1.markdown(f"**{label}**", help=None)
     return col2.number_input(label="", key=key, **kwargs)
 
 def inline_text_input(label, key):
-    col1, col2 = st.columns([1, 3], gap="small")
-    with col1:
-        st.markdown(f"<div style='margin-top: 10px; font-weight: 600;'>{label}</div>", unsafe_allow_html=True)
+    col1, col2 = st.columns([1.5, 2.5], gap="small")
+    col1.markdown(f"**{label}**")
     return col2.text_input(label="", key=key)
+
 
 
 # --- LEFT: Inputs ---
