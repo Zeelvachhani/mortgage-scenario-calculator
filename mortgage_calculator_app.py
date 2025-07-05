@@ -1,168 +1,133 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+from streamlit.components.v1 import html
 
 st.set_page_config(page_title="Mortgage Scenario Calculator", layout="wide")
-st.title("\U0001F3E1 Mortgage Scenario Calculator")
+st.title("🏠 Mortgage Scenario Calculator")
 st.markdown("Enter your mortgage parameters below. Results will appear on the right.")
 
 left_col, right_col = st.columns([1.5, 4])
 
-# --- Helper input functions with required flag ---
-def inline_number_input(label, key, required=True, **kwargs):
-    col1, col2 = st.columns([2.5, 2.5], gap="small")
-    label_html = f"<label style='font-weight:600;'>{label}{' <span style=\"color:red;\">*</span>' if required else ''}</label>"
-    col1.markdown(label_html, unsafe_allow_html=True)
-    return col2.number_input("", key=key, **kwargs)
+# --- HTML Inline Input Component ---
+def inline_html_input(label, key, input_type="number", required=True, placeholder="", default=""):
+    star = '<span style="color:red;">*</span>' if required else ""
+    ui = f"""
+    <div style="display:flex; align-items:center; margin-bottom:12px;">
+      <label for="{key}" style="width:180px; font-weight:600; padding-right:10px;">{label}{star}</label>
+      <input id="{key}" name="{key}" type="{input_type}" placeholder="{placeholder}" value="{default}"
+             style="flex:1; min-width:120px; padding:6px 10px; border:1px solid #ccc; border-radius:4px; box-sizing:border-box;" />
+    </div>
+    <script>
+      const el = window.document.getElementById("{key}");
+      if (el) {{
+        el.addEventListener('input', () => {{
+          window.parent.postMessage({{isStreamlitMessage: true, type: 'streamlit:setComponentValue', key: '{key}', value: el.value}}, '*');
+        }});
+      }}
+    </script>
+    """
+    html(ui, height=50)
 
-def inline_text_input(label, key, required=True):
-    col1, col2 = st.columns([2.5, 2.5], gap="small")
-    label_html = f"<label style='font-weight:600;'>{label}{' <span style=\"color:red;\">*</span>' if required else ''}</label>"
-    col1.markdown(label_html, unsafe_allow_html=True)
-    return col2.text_input("", key=key)
-
-# --- LEFT: Inputs ---
+# --- Inputs on the left panel ---
 with left_col:
-    st.subheader("\U0001F4DD Input Parameters")
+    st.subheader("📝 Input Parameters")
 
-    home_price = inline_number_input("Home Price $:", "home_price", min_value=0.0, step=10000.0)
-    hoa = inline_number_input("HOA $:", "hoa", min_value=0.0, step=10.0)
-    property_tax_rate = inline_number_input("Property Tax %:", "tax", min_value=0.0, step=0.1) / 100
-    insurance_rate = inline_number_input("Insurance %:", "insurance", min_value=0.0, step=0.1) / 100
-    pmi_rate = inline_number_input("PMI %:", "pmi", min_value=0.0, step=0.1) / 100
+    # numeric fields
+    for label, key, default in [
+        ("Home Price $", "home_price", "300000"),
+        ("HOA $", "hoa", "200"),
+        ("Property Tax %", "tax", "1.2"),
+        ("Insurance %", "insurance", "0.5"),
+        ("PMI %", "pmi", "0.3"),
+        ("Cash Available $", "cash", "60000"),
+        ("Interest Rate %", "rate", "5.0"),
+        ("Loan Term (Years)", "term", "30"),
+        ("Monthly Liability $", "liability", "0"),
+        ("Annual Income $", "income", "100000"),
+        ("Max DTI %", "dti", "43")
+    ]:
+        inline_html_input(label, key, input_type="number", required=True, default=default)
 
-    cash_available = inline_number_input("Cash Available $:", "cash", min_value=0.0, step=10000.0)
-    min_down_str = inline_text_input("Min Down Payment %:", "min_dp", required=False)
-    max_down_str = inline_text_input("Max Down Payment %:", "max_dp", required=False)
-    interest_rate_base = inline_number_input("Interest Rate %:", "rate", min_value=0.0, step=0.01) / 100
-    loan_term = int(inline_number_input("Loan Term (Years):", "term", min_value=1, step=1, value=30))
+    # optional fields
+    inline_html_input("Min Down Payment %", "min_dp", input_type="number", required=False)
+    inline_html_input("Max Down Payment %", "max_dp", input_type="number", required=False)
+    inline_html_input("Max Monthly Expense $", "max_exp", input_type="number", required=False)
 
-    monthly_liability = inline_number_input("Monthly Liability $:", "liability", min_value=0.0, step=100.0)
-    annual_income = inline_number_input("Annual Income $:", "income", min_value=0.0, step=10000.0)
-    max_dti = inline_number_input("Max DTI %:", "dti", min_value=0.0, max_value=100.0, step=1.0) / 100
-    max_monthly_expense_str = inline_text_input("Max Monthly Expense $:", "max_exp", required=False)
+    calculate = st.button("🔄 Calculate Scenarios")
 
-    calculate = st.button("\U0001F504 Calculate Scenarios")
+# --- Retrieve values from session_state ---
+def get_val(key, numeric=True, default=0.0):
+    val = st.session_state.get(key, "")
+    try:
+        return float(val) if numeric else val
+    except:
+        return default
 
-# --- Validate optional text inputs ---
-try:
-    min_down_pct = float(min_down_str) / 100 if min_down_str else 0.0
-except:
-    st.warning("Min Down Payment % must be a number.")
-    min_down_pct = 0.0
+home_price = get_val("home_price")
+hoa = get_val("hoa")
+property_tax_rate = get_val("tax") / 100
+insurance_rate = get_val("insurance") / 100
+pmi_rate = get_val("pmi") / 100
+cash_available = get_val("cash")
+interest_rate_base = get_val("rate") / 100
+loan_term = int(get_val("term", default=30))
+monthly_liability = get_val("liability")
+annual_income = get_val("income")
+max_dti = get_val("dti") / 100
 
-try:
-    max_down_pct = float(max_down_str) / 100 if max_down_str else 1.0
-except:
-    st.warning("Max Down Payment % must be a number.")
-    max_down_pct = 1.0
+min_down_pct = get_val("min_dp") / 100 if st.session_state.get("min_dp") else 0.0
+max_down_pct = get_val("max_dp") / 100 if st.session_state.get("max_dp") else 1.0
+max_monthly_expense = get_val("max_exp", numeric=True) if st.session_state.get("max_exp") else None
 
-try:
-    max_monthly_expense = float(max_monthly_expense_str.replace(',', '')) if max_monthly_expense_str else None
-except:
-    st.warning("Max Monthly Expense must be a number.")
-    max_monthly_expense = None
-
-# --- Calculation logic ---
-def calculate_monthly_payment(loan_amount, interest_rate, years):
-    r = interest_rate / 12
+# --- Calculation ---
+def calculate_monthly_payment(P, annual_rate, years):
+    r = annual_rate / 12
     n = years * 12
-    return loan_amount * r * (1 + r) ** n / ((1 + r) ** n - 1)
+    return P * r * (1 + r) ** n / ((1 + r) ** n - 1)
 
-# --- RIGHT: Results ---
+# --- Results on the right panel ---
 with right_col:
     if calculate:
         monthly_income = annual_income / 12
         results = []
-
-        for points in range(0, 11):
+        for points in range(11):
             discount = points * 0.0025
-            adjusted_rate = interest_rate_base - discount
-
-            for dp_pct in np.arange(min_down_pct, max_down_pct + 0.01, 0.01):
-                down_payment = home_price * dp_pct
-                loan_amt = home_price - down_payment
-                closing_cost = loan_amt * (points * 0.01)
-                total_cash = down_payment + closing_cost
-
-                if total_cash > cash_available:
+            rate_adj = interest_rate_base - discount
+            for dp in np.arange(min_down_pct, max_down_pct + 0.01, 0.01):
+                down = home_price * dp
+                loan_amt = home_price - down
+                closing = loan_amt * (points * 0.01)
+                if down + closing > cash_available:
                     continue
-
-                principal_interest = calculate_monthly_payment(loan_amt, adjusted_rate, loan_term)
-                property_tax = (home_price * property_tax_rate) / 12
-                insurance = home_price * insurance_rate / 12
-                pmi = (loan_amt * pmi_rate / 12) if dp_pct < 0.20 else 0
-                total_monthly = principal_interest + property_tax + hoa + insurance + pmi
-                dti = (total_monthly + monthly_liability) / monthly_income
-
-                if (max_monthly_expense is None or total_monthly <= max_monthly_expense) and dti <= max_dti:
+                pi = calculate_monthly_payment(loan_amt, rate_adj, loan_term)
+                prop_tax = home_price * property_tax_rate / 12
+                ins = home_price * insurance_rate / 12
+                pmi_val = loan_amt * pmi_rate / 12 if dp < 0.20 else 0
+                total_m = pi + prop_tax + hoa + ins + pmi_val
+                dti = (total_m + monthly_liability) / monthly_income
+                if (max_monthly_expense is None or total_m <= max_monthly_expense) and dti <= max_dti:
                     results.append({
-                        "Home Price $": round(home_price),
-                        "Down %": f"{dp_pct * 100:.1f}%",
-                        "Down $": round(down_payment),
-                        "Loan Amount $": round(loan_amt),
-                        "Interest Rate %": f"{adjusted_rate * 100:.3f}%",
-                        "Discount Points": points,
-                        "Closing Cost $": round(closing_cost),
-                        "PMI $": f"{pmi:.2f}",
-                        "Total Cash Used $": round(total_cash),
-                        "Monthly P&I $": f"{principal_interest:.2f}",
-                        "Total Monthly $": f"{total_monthly:.2f}",
-                        "DTI %": f"{dti * 100:.2f}"
+                        "Down %": f"{dp*100:.1f}%",
+                        "Rate %": f"{rate_adj*100:.3f}%",
+                        "Loan $": round(loan_amt),
+                        "Monthly $": f"{total_m:.2f}",
+                        "DTI %": f"{dti*100:.2f}"
                     })
-
         if results:
-            st.subheader("\U0001F4D8 Results")
+            st.subheader("📊 Results")
             df = pd.DataFrame(results)
             st.dataframe(df, use_container_width=True)
-
-            csv = df.to_csv(index=False).encode('utf-8')
-            st.download_button(
-                label="\U0001F4E5 Download as CSV",
-                data=csv,
-                file_name="mortgage_scenarios.csv",
-                mime="text/csv"
-            )
-
-            st.subheader("\U0001F4D8 How Calculations Work")
-            st.markdown("""
-            **How Monthly P&I is Calculated:**
-
-            The **Principal & Interest (P&I)** part of your mortgage payment is calculated based on the following:
-
-            1. **Loan Amount** (P) = The total amount you're borrowing.
-            2. **Monthly Interest Rate** (r) = The annual interest rate divided by 12.
-            3. **Number of Payments** (n) = The number of months in your loan term (e.g., for a 30-year loan, it’s 360 months).
-
-            The formula is:
-
-            **Monthly P&I = (Loan Amount × Monthly Interest Rate × (1 + Monthly Interest Rate) ^ Number of Payments) ÷ ((1 + Monthly Interest Rate) ^ Number of Payments - 1)**
-
-            ### Example:
-            - Borrowing $200,000 at 5% for 30 years gives a monthly P&I of ~$1,073.
-
-            **Discount Points:**
-            - Each point equals 1% of your loan amount. More points = lower interest.
-
-            **Closing Costs:**
-            - Estimated as a percentage of the loan amount.
-
-            **DTI (Debt-to-Income Ratio):**
-            - DTI = (Total Monthly Payments + Monthly Liabilities) ÷ Monthly Income
-
-            **Total Monthly Payment:**
-            - Includes P&I, taxes, insurance, HOA, and PMI (if applicable).
-            """)
-
         else:
             st.warning("No valid scenarios found based on your input.")
 
-# --- Footer ---
+# Footer
 st.markdown("---")
-st.markdown("""
-<div style="text-align: center; font-size: 14px;">
-    <p>✨ Crafted with care by <strong>Zeel Vachhani</strong> ✨</p>
-    <p>© 2025 Zeel Vachhani. All rights reserved.</p>
-    <p><em>This tool is for informational purposes only and should not be considered financial advice.</em></p>
-</div>
-""", unsafe_allow_html=True)
+st.markdown(
+    """
+    <div style="text-align:center; font-size:14px; color:#555;">
+        ✨ Crafted with care by <strong>You</strong> ✨
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
