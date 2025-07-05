@@ -133,6 +133,23 @@ with right_col:
             - If you're borrowing $200,000 with a 5% annual interest rate and a 30-year loan, your monthly P&I payment will be calculated using this method.
           
             In simpler terms: the higher your loan amount, interest rate, or the longer your loan term, the higher your monthly payment will be.
+
+            **Discount Points:**
+            - Discount points are a form of prepaid interest. Each point equals 1% of your loan amount.
+            - The more points you pay, the lower your interest rate, which can lower your monthly payments.
+
+            **Closing Costs:**
+            - Closing costs include fees for processing your loan and can vary, but we estimate them as a percentage of the loan amount. 
+            - It's typically between 2% to 5% of the loan amount.
+
+            **DTI (Debt-to-Income Ratio):**
+            - This ratio is used by lenders to determine how much of your monthly income goes toward paying your debts.
+            - The formula is: **DTI = (Total Monthly Payments + Monthly Liabilities) ÷ Monthly Income**
+            - A lower DTI is preferable, as it shows you have more disposable income to cover additional expenses.
+
+            **Total Monthly Payment:**
+            - This includes your principal and interest (P&I), plus other costs like property taxes, insurance, HOA fees, and PMI (if applicable).
+            - This is the total amount you pay each month for your mortgage and related expenses.
             """)
 
         else:
