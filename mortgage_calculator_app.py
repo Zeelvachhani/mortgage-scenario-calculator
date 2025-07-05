@@ -105,11 +105,15 @@ if calculate and all(field is not None and field > 0 for field in required_field
         best_payment = df.loc[df["Total Monthly $"].idxmin()]
         best_dti = df.loc[df["DTI %"].idxmin()]
         best_cash = df.loc[df["Total Cash Used $"].idxmin()]
+        best_closing = df.loc[df["Closing Cost $"].idxmin()]
 
-        col1, col2, col3 = st.columns(3)
+
+        col1, col2, col3, col4 = st.columns(4)
         col1.metric("💰 Lowest Monthly Payment", f"${best_payment['Total Monthly $']:,}")
         col2.metric("📉 Best Debt-to-Income Ratio", f"{best_dti['DTI %']:.2f}%")
         col3.metric("💵 Lowest Total Cash Used", f"${best_cash['Total Cash Used $']:,}")
+        col4.metric("🏁 Lowest Closing Cost", f"${best_closing['Closing Cost $']:,}")
+
 
         # --- Data Table ---
         st.subheader("📊 Scenario Results")
