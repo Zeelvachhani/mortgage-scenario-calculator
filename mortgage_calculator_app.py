@@ -4,36 +4,38 @@ import numpy as np
 
 st.set_page_config(page_title="Mortgage Scenario Calculator", layout="wide")
 st.title("🏡 Mortgage Scenario Calculator")
-st.markdown("Enter your mortgage parameters on the left. Results will appear on the right.")
+st.markdown("Enter your mortgage parameters below. Results will appear on the right.")
 
-# Split layout: Input (left), Output (right)
 left_col, right_col = st.columns([1, 2])
 
-# Left Column: Input fields
+# --- LEFT: Inputs ---
 with left_col:
-    st.subheader("📥 Input Parameters")
+    st.subheader("📅 Input Parameters")
 
-    home_price = st.number_input("Home Price $", min_value=0.0, step=1000.0, format="%.2f")
-    hoa = st.number_input("HOA $", min_value=0.0, step=10.0, format="%.2f")
-    property_tax_rate = st.number_input("Property Tax %", min_value=0.0, step=0.1, format="%.2f") / 100
-    insurance_rate = st.number_input("Insurance %", min_value=0.0, step=0.1, format="%.2f") / 100
-    pmi_rate = st.number_input("PMI %", min_value=0.0, step=0.1, format="%.2f") / 100
+    def labeled_input(label, key=None, **kwargs):
+        col1, col2 = st.columns([0.35, 0.65])
+        col1.markdown(f"**{label}**")
+        return col2.text_input("", key=key, **kwargs)
 
-    cash_available = st.number_input("Cash Available $", min_value=0.0, step=1000.0, format="%.2f")
+    home_price = float(labeled_input("Home Price $", key="home_price") or 0)
+    hoa = float(labeled_input("HOA $", key="hoa") or 0)
+    property_tax_rate = float(labeled_input("Property Tax %", key="tax") or 0) / 100
+    insurance_rate = float(labeled_input("Insurance %", key="insurance") or 0) / 100
+    pmi_rate = float(labeled_input("PMI %", key="pmi") or 0) / 100
 
-    min_down_str = st.text_input("Min Down Payment % (optional)", "")
-    max_down_str = st.text_input("Max Down Payment % (optional)", "")
-    interest_rate_base = st.number_input("Interest Rate %", min_value=0.0, step=0.1, format="%.3f") / 100
-    loan_term = st.number_input("Loan Term (Years)", min_value=1, step=1, value=30)
+    cash_available = float(labeled_input("Cash Available $", key="cash") or 0)
+    min_down_str = labeled_input("Min Down Payment % (optional)", key="min_dp")
+    max_down_str = labeled_input("Max Down Payment % (optional)", key="max_dp")
+    interest_rate_base = float(labeled_input("Interest Rate %", key="rate") or 0) / 100
+    loan_term = int(float(labeled_input("Loan Term (Years)", key="term") or 30))
 
-    monthly_liability = st.number_input("Monthly Liability $", min_value=0.0, step=100.0, format="%.2f")
-    annual_income = st.number_input("Annual Income $", min_value=0.0, step=1000.0, format="%.2f")
-    max_dti = st.number_input("Max DTI %", min_value=0.0, max_value=100.0, step=1.0, format="%.2f") / 100
-    max_monthly_expense_str = st.text_input("Max Monthly Expense $ (optional)", "")
+    monthly_liability = float(labeled_input("Monthly Liability $", key="liability") or 0)
+    annual_income = float(labeled_input("Annual Income $", key="income") or 0)
+    max_dti = float(labeled_input("Max DTI %", key="dti") or 0) / 100
+    max_monthly_expense_str = labeled_input("Max Monthly Expense $ (optional)", key="max_exp")
 
     calculate = st.button("🔍 Calculate Scenarios")
 
-# Convert optional inputs safely
 try:
     min_down_pct = float(min_down_str) / 100 if min_down_str else 0.0
 except:
@@ -52,13 +54,12 @@ except:
     st.warning("Max Monthly Expense must be a number.")
     max_monthly_expense = None
 
-# Monthly payment formula
 def calculate_monthly_payment(loan_amount, interest_rate, years):
     r = interest_rate / 12
     n = years * 12
     return loan_amount * r * (1 + r) ** n / ((1 + r) ** n - 1)
 
-# Right Column: Results
+# --- RIGHT: Results ---
 with right_col:
     if calculate:
         monthly_income = annual_income / 12
@@ -97,62 +98,42 @@ with right_col:
                         "Total Cash Used $": round(total_cash),
                         "Monthly P&I $": f"{principal_interest:.2f}",
                         "Total Monthly $": f"{total_monthly:.2f}",
-                        "DTI %": f"{dti * 100:.2f}",
-                        "Details": {
-                            "dp_pct": dp_pct,
-                            "adjusted_rate": adjusted_rate,
-                            "principal_interest": principal_interest,
-                            "property_tax": property_tax,
-                            "insurance": insurance,
-                            "pmi": pmi,
-                            "dti": dti,
-                            "total_monthly": total_monthly
-                        }
+                        "DTI %": f"{dti * 100:.2f}"
                     })
 
         if results:
             st.subheader("📊 Best Scenarios")
-            df = pd.DataFrame(results).drop(columns="Details")
+            df = pd.DataFrame(results)
             st.dataframe(df, use_container_width=True)
 
             csv = df.to_csv(index=False).encode('utf-8')
             st.download_button(
-                label="📥 Download results as Excel (CSV)",
+                label="📅 Download as CSV",
                 data=csv,
                 file_name="mortgage_scenarios.csv",
                 mime="text/csv"
             )
 
-            st.subheader("📘 Detailed Calculation Explanation")
-            for i, r in enumerate(results[:10]):  # show top 10
-                with st.expander(f"📄 Scenario {i+1}: {r['Down %']} down, {r['Interest Rate %']}"):
-                    d = r["Details"]
-                    st.markdown(f"""
-                    **Home Price:** ${home_price:,.0f}  
-                    **Down Payment ({r['Down %']}):** ${r['Down $']:,.0f}  
-                    **Loan Amount:** ${r['Loan Amount $']:,.0f}  
-                    **Interest Rate (after {r['Discount Points']} points):** {r['Interest Rate %']}  
-                    **Closing Cost:** ${r['Closing Cost $']:,.0f}  
-                    **PMI:** ${r['PMI $']}  
-                    **Monthly Principal & Interest:** ${d['principal_interest']:.2f}  
-                    **Property Tax:** ${d['property_tax']:.2f}  
-                    **Insurance:** ${d['insurance']:.2f}  
-                    **HOA:** ${hoa:.2f}  
-                    **Total Monthly Payment:** ${d['total_monthly']:.2f}  
-                    **Debt-to-Income (DTI):** {d['dti']*100:.2f}%
-                    """)
+            st.subheader("\ud83d\udcd8 How Calculations Work")
+            st.markdown("""
+            **Key Formulas Used:**
+
+            - **Monthly P&I** = \( \frac{P \cdot r \cdot (1 + r)^n}{(1 + r)^n - 1} \)
+            - **Total Monthly Payment** = P&I + PMI + Insurance + Property Tax + HOA
+            - **DTI** = (Total Monthly + Monthly Liabilities) / (Annual Income ÷ 12)
+            - **PMI** only applies if Down Payment < 20%
+            - **Closing Costs** = Loan Amount × Discount Points × 1%
+            """)
+
         else:
             st.warning("No valid scenarios found based on your input.")
 
-# Footer (appears below both columns)
+# Footer
 st.markdown("---")
-st.markdown(
-    """
-    <div style="text-align: center; font-size: 14px;">
-        <p>✨ Crafted with care by <strong>Zeel Vachhani</strong> ✨</p>
-        <p>© 2025 Zeel Vachhani. All rights reserved.</p>
-        <p><em>This tool is for informational purposes only and should not be considered financial advice.</em></p>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+st.markdown("""
+<div style="text-align: center; font-size: 14px;">
+    <p>✨ Crafted with care by <strong>Zeel Vachhani</strong> ✨</p>
+    <p>© 2025 Zeel Vachhani. All rights reserved.</p>
+    <p><em>This tool is for informational purposes only and should not be considered financial advice.</em></p>
+</div>
+""", unsafe_allow_html=True)
