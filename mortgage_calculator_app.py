@@ -10,16 +10,16 @@ left_col, right_col = st.columns([1.5, 4])
 
 # --- Helper input functions with required flag ---
 def inline_number_input(label, key, required=True, **kwargs):
-    col1, col2 = st.columns([2, 2.5])
-    label_text = f"<span style='font-weight:600;'>{label}{' <span style=\"color:red;\">*</span>' if required else ''}</span>"
-    col1.markdown(label_text, unsafe_allow_html=True)
-    return col2.number_input(label="", key=key, **kwargs)
+    col1, col2 = st.columns([1, 2.5], gap="small")
+    label_html = f"<label style='font-weight:600;'>{label}{' <span style=\"color:red;\">*</span>' if required else ''}</label>"
+    col1.markdown(label_html, unsafe_allow_html=True)
+    return col2.number_input("", key=key, **kwargs)
 
 def inline_text_input(label, key, required=True):
-    col1, col2 = st.columns([2, 2.5])
-    label_text = f"<span style='font-weight:600;'>{label}{' <span style=\"color:red;\">*</span>' if required else ''}</span>"
-    col1.markdown(label_text, unsafe_allow_html=True)
-    return col2.text_input(label="", key=key)
+    col1, col2 = st.columns([1, 2.5], gap="small")
+    label_html = f"<label style='font-weight:600;'>{label}{' <span style=\"color:red;\">*</span>' if required else ''}</label>"
+    col1.markdown(label_html, unsafe_allow_html=True)
+    return col2.text_input("", key=key)
 
 # --- LEFT: Inputs ---
 with left_col:
