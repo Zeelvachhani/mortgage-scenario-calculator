@@ -8,14 +8,22 @@ st.markdown("Enter your mortgage parameters below. Results will appear on the ri
 
 left_col, right_col = st.columns([1.5, 4])  # Adjusted column width
 
-def inline_number_input(label, key, **kwargs):
-    col1, col2 = st.columns([1.5, 2.5], gap="small")  # Label column slightly narrower
-    col1.markdown(f"**{label}**", help=None)
+def inline_number_input(label, key, required=True, **kwargs):
+    col1, col2 = st.columns([1.5, 2.5], gap="small")
+
+    # Add red asterisk for required fields
+    label_text = f"<span style='font-weight:600;'>{label}{' <span style=\"color:red;\">*</span>' if required else ''}</span>"
+    col1.markdown(label_text, unsafe_allow_html=True)
+
     return col2.number_input(label="", key=key, **kwargs)
 
-def inline_text_input(label, key):
+def inline_text_input(label, key, required=True):
     col1, col2 = st.columns([1.5, 2.5], gap="small")
-    col1.markdown(f"**{label}**")
+
+    # Add red asterisk for required fields
+    label_text = f"<span style='font-weight:600;'>{label}{' <span style=\"color:red;\">*</span>' if required else ''}</span>"
+    col1.markdown(label_text, unsafe_allow_html=True)
+
     return col2.text_input(label="", key=key)
 
 
