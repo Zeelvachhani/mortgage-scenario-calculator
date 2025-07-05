@@ -112,13 +112,27 @@ with right_col:
             # Now placing the calculations explanation at the bottom
             st.subheader("📘 How Calculations Work")
             st.markdown("""
-            **Key Formulas Used:**
+            **How Monthly P&I is Calculated:**
 
-            - **Monthly P&I** = \\( \\frac{P \\cdot r \\cdot (1 + r)^n}{(1 + r)^n - 1} \\)
-            - **Total Monthly Payment** = P&I + PMI + Insurance + Property Tax + HOA
-            - **DTI** = (Total Monthly + Monthly Liabilities) / (Annual Income ÷ 12)
-            - **PMI** only applies if Down Payment < 20%
-            - **Closing Costs** = Loan Amount × Discount Points × 1%
+            The **Principal & Interest (P&I)** part of your mortgage payment is calculated based on the following:
+
+            1. **Loan Amount** (P) = The total amount you're borrowing.
+            2. **Monthly Interest Rate** (r) = The annual interest rate divided by 12.
+            3. **Number of Payments** (n) = The number of months in your loan term (e.g., for a 30-year loan, it’s 360 months).
+
+            The formula is:
+
+            **Monthly P&I = (Loan Amount × Monthly Interest Rate × (1 + Monthly Interest Rate) ^ Number of Payments) ÷ ((1 + Monthly Interest Rate) ^ Number of Payments - 1)**
+
+            ### Simplified:
+            - Multiply the **Loan Amount** by the **Monthly Interest Rate**.
+            - Then multiply that by **(1 + Monthly Interest Rate) raised to the number of payments**.
+            - Finally, divide it by **the same value minus 1**.
+
+            ### Example:
+            - If you're borrowing $200,000 with a 5% annual interest rate and a 30-year loan, your monthly P&I payment will be calculated using this method.
+          
+            In simpler terms: the higher your loan amount, interest rate, or the longer your loan term, the higher your monthly payment will be.
             """)
 
         else:
