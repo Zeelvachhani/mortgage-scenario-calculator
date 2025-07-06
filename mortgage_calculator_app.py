@@ -249,7 +249,7 @@ if calculate and all(field is not None and field > 0 for field in required_field
                 ax1.plot(
                     [year_data["Year"] for year_data in yearly_schedule],
                     [year_data["Remaining Balance $"] for year_data in yearly_schedule],
-                    label=f"Loan ID {scenario['Loan ID']} Remaining Balance"
+                    label=f"Loan ID {scenario.get('Loan ID', 'N/A')} Remaining Balance"
                 )
 
             ax1.tick_params(axis='y', labelcolor=color)
@@ -267,7 +267,7 @@ if calculate and all(field is not None and field > 0 for field in required_field
                 ax2.plot(
                     [year_data["Year"] for year_data in yearly_schedule],
                     [year_data["Total Interest Paid $"] for year_data in yearly_schedule],
-                    label=f"Loan ID {scenario['Loan ID']} Interest Paid",
+                    label=f"Loan ID {scenario.get('Loan ID', 'N/A')} Interest Paid",
                     linestyle='--'
                 )
 
