@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 
 st.set_page_config(page_title="Mortgage Scenario Dashboard", layout="wide")
 
@@ -45,42 +44,6 @@ def calculate_monthly_payment(loan_amount, interest_rate, years):
         return loan_amount / n
     return loan_amount * r * (1 + r) ** n / ((1 + r) ** n - 1)
 
-def loan_details_table(df):
-    def interest_paid(loan, r, pmt, months):
-        balance = loan
-        interest = 0
-        for _ in range(months):
-            int_paid = balance * r
-            principal = pmt - int_paid
-            balance -= principal
-            interest += int_paid
-        return interest, balance
-
-    records = []
-    for i, row in df.iterrows():
-        loan_amt = row["Loan Amount $"]
-        rate = row["Interest Rate %"] / 100
-        pmt = calculate_monthly_payment(loan_amt, rate, 30)
-        pmi = row["PMI $"]
-        total_pmt = pmt + pmi
-
-        r = rate / 12
-
-        for year in [5, 10, 15]:
-            int_paid, rem_bal = interest_paid(loan_amt, r, pmt, year * 12)
-            row[f"Total Payment in {year} Years (includes PMI if applicable) $"] = round(total_pmt * 12 * year)
-            row[f"Total Interest in {year} Years $"] = round(int_paid)
-            row[f"Remaining Balance end of Year {year} $"] = round(rem_bal)
-
-        total_int, _ = interest_paid(loan_amt, r, pmt, 30 * 12)
-        row["Total Payment (includes PMI if applicable) $"] = round(total_pmt * 360)
-        row["Total Interest $"] = round(total_int)
-        row["Loan ID"] = f"Loan {i+1}"
-        records.append(row)
-
-    return pd.DataFrame(records)
-
-# --- Amortization Schedule Helper Function ---
 def amortization_schedule(loan_amt, interest_rate, loan_term):
     r = interest_rate / 12  # Monthly interest rate
     n = loan_term * 12      # Total number of months
@@ -225,80 +188,6 @@ if calculate and all(field is not None and field > 0 for field in required_field
                 "Total Interest Paid $": "${:,.0f}",
                 "Remaining Balance $": "${:,.0f}"
             }).set_properties(**{'text-align': 'center'}), height=500 if len(df_amortization) > 12 else None)
-
-            # Chart for Remaining Balance and Interest Paid for Key Scenarios Only
-            # Find the key scenarios to display
-            highest_down_payment = df.loc[df["Down %"].idxmax()]
-            lowest_interest_rate = df.loc[df["Interest Rate %"].idxmin()]
-            highest_discount_points = df.loc[df["Discount Points"].idxmax()]
-            lowest_monthly_pni = df.loc[df["Monthly P&I $"].idxmin()]
-            
-            # Assign specific labels to each scenario
-            scenarios = [
-                (highest_down_payment, "Highest Down Payment", 'blue'),
-                (lowest_interest_rate, "Lowest Interest Rate", 'green'),
-                (highest_discount_points, "Highest Discount Points", 'orange'),
-                (lowest_monthly_pni, "Lowest Monthly P&I", 'red')
-            ]
-            
-            fig, ax1 = plt.subplots(figsize=(10, 5))
-            ax1.set_xlabel('Year')
-            ax1.set_ylabel('Remaining Balance $', color='tab:blue')
-            
-            # Plot lines for the selected scenarios (Remaining Balance)
-            for scenario, label, color in scenarios:
-                loan_amt = scenario["Loan Amount $"]
-                rate = scenario["Interest Rate %"] / 100
-                yearly_schedule = amortization_schedule(loan_amt, rate, loan_term)
-            
-                ax1.plot(
-                    [year_data["Year"] for year_data in yearly_schedule],
-                    [year_data["Remaining Balance $"] for year_data in yearly_schedule],
-                    label=label,  # Use the label for legend
-                    color=color
-                )
-            
-            ax1.tick_params(axis='y', labelcolor='tab:blue')
-            
-            ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
-            ax2.set_ylabel('Interest Paid $', color='tab:red')
-            
-            # Plot lines for interest paid
-            for scenario, label, color in scenarios:
-                loan_amt = scenario["Loan Amount $"]
-                rate = scenario["Interest Rate %"] / 100
-                yearly_schedule = amortization_schedule(loan_amt, rate, loan_term)
-            
-                ax2.plot(
-                    [year_data["Year"] for year_data in yearly_schedule],
-                    [year_data["Total Interest Paid $"] for year_data in yearly_schedule],
-                    label=f"{label} Interest Paid",  # Add Interest Paid to the label
-                    color=color,
-                    linestyle='--'  # Dashed lines for interest paid
-                )
-            
-            ax2.tick_params(axis='y', labelcolor='tab:red')
-            
-            # Combine the legend for both axes
-            lines, labels = ax1.get_legend_handles_labels()
-            lines2, labels2 = ax2.get_legend_handles_labels()
-            
-            # Combine both handles and labels, ensuring they don't repeat
-            lines += lines2
-            labels += labels2
-            
-            # Set unique labels
-            unique_labels = list(dict.fromkeys(labels))
-            
-            fig.tight_layout()  # make sure there is no clipping
-            
-            # Apply the combined legend
-            ax1.legend(lines, unique_labels, loc='upper left', bbox_to_anchor=(1, 1))
-            ax2.legend(lines, unique_labels, loc='upper right', bbox_to_anchor=(1, 1))
-            
-            st.pyplot(fig)
-
-
 
             # Add option to download the amortization schedule
             csv_amortization = df_amortization.to_csv(index=False).encode('utf-8')
