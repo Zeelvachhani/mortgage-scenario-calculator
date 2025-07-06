@@ -46,9 +46,6 @@ def calculate_monthly_payment(loan_amount, interest_rate, years):
     return loan_amount * r * (1 + r) ** n / ((1 + r) ** n - 1)
 
 def loan_details_table(df):
-    def cumulative_payment(r, n, pmt, years):
-        return pmt * min(n, years * 12)
-
     def interest_paid(loan, r, pmt, months):
         balance = loan
         interest = 0
@@ -60,7 +57,7 @@ def loan_details_table(df):
         return interest, balance
 
     records = []
-    for _, row in df.iterrows():
+    for i, row in df.iterrows():
         loan_amt = row["Loan Amount $"]
         rate = row["Interest Rate %"] / 100
         pmt = calculate_monthly_payment(loan_amt, rate, 30)
@@ -78,6 +75,7 @@ def loan_details_table(df):
         total_int, _ = interest_paid(loan_amt, r, pmt, 30 * 12)
         row["Total Payment (includes PMI if applicable) $"] = round(total_pmt * 360, 2)
         row["Total Interest $"] = round(total_int, 2)
+        row["Loan ID"] = f"Loan {i+1}"
         records.append(row)
 
     return pd.DataFrame(records)
@@ -144,8 +142,8 @@ if calculate and all(field is not None and field > 0 for field in required_field
             st.dataframe(df.style.format({
                 "Home Price $": "${:,.0f}",
                 "Down %": "{:.2f}%",
-                "Down $": "${:.0f}",
-                "Loan Amount $": "${:.0f}",
+                "Down $": "${:,.0f}",
+                "Loan Amount $": "${:,.0f}",
                 "Interest Rate %": "{:.2f}%",
                 "Closing Cost $": "${:.2f}",
                 "PMI $": "${:.2f}",
@@ -204,46 +202,6 @@ if calculate and all(field is not None and field > 0 for field in required_field
             st.subheader("📈 Loan Analysis (30-Year Term)")
             df_loan = loan_details_table(df.copy())
             st.dataframe(df_loan.style.format("${:,.2f}"), height=500 if len(df_loan) > 12 else None)
-
-            # --- Stacked Bar for Total Payment (Principal + Interest) ---
-            st.subheader("📊 Total Payment (Principal + Interest) by Loan Term")
-            fig, ax = plt.subplots(figsize=(10, 5))
-            df_loan[['Home Price $', 'Total Payment in 5 Years (includes PMI if applicable) $',
-                     'Total Payment in 10 Years (includes PMI if applicable) $',
-                     'Total Payment in 15 Years (includes PMI if applicable) $',
-                     'Total Payment (includes PMI if applicable) $']].set_index('Home Price $').plot(
-                kind='bar', stacked=True, ax=ax)
-            ax.set_title("Total Payment (Principal + Interest) by Loan Term")
-            ax.set_ylabel("Total Payment ($)")
-            ax.set_xlabel("Home Price $")
-            ax.legend(title="Loan Terms")
-            st.pyplot(fig)
-
-            # --- Line Chart for Remaining Balance Over Time ---
-            st.subheader("📉 Remaining Balance Over Time")
-            fig, ax = plt.subplots(figsize=(10, 5))
-            for index, row in df_loan.iterrows():
-                ax.plot([5, 10, 15], [row['Remaining Balance end of Year 5 $'], 
-                                     row['Remaining Balance end of Year 10 $'],
-                                     row['Remaining Balance end of Year 15 $']], label=f"Loan {index+1}")
-            ax.set_xlabel('Years')
-            ax.set_ylabel('Remaining Balance ($)')
-            ax.set_title('Remaining Balance Over Time')
-            ax.legend(title="Loan Options")
-            ax.grid(True)
-            st.pyplot(fig)
-
-            # --- Bar Chart for Total Interest Paid Over Time ---
-            st.subheader("📊 Total Interest Paid Over Time")
-            fig, ax = plt.subplots(figsize=(10, 5))
-            df_loan[['Home Price $', 'Total Interest in 5 Years $', 
-                     'Total Interest in 10 Years $', 'Total Interest in 15 Years $',
-                     'Total Interest $']].set_index('Home Price $').plot(kind='bar', ax=ax)
-            ax.set_title("Total Interest Paid Over Time")
-            ax.set_ylabel("Total Interest ($)")
-            ax.set_xlabel("Home Price $")
-            st.pyplot(fig)
-
             csv_loan = df_loan.to_csv(index=False).encode('utf-8')
             st.download_button("⬇️ Download Loan Analysis CSV", data=csv_loan, file_name="loan_analysis.csv", mime="text/csv")
 
