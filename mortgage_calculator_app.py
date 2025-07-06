@@ -217,10 +217,9 @@ if calculate and all(field is not None and field > 0 for field in required_field
             - **r** = Monthly Interest Rate (Annual Rate ÷ 12)  
             - **n** = Total Number of Payments (Loan Term in Months)
             
-                st.markdown("""
-                    #### 🔍 Example:
-                    A loan amount of **$200,000** at an interest rate of **5%** over a **30-year term** results in an estimated monthly P&I payment of approximately **$1,073**.
-                """)
+            #### 🔍 Example:
+            **A loan amount of $200,000 at an interest rate of 5% over a 30-year term results in an estimated monthly P&I payment of approximately $1,073.**
+
 
             ---
             
