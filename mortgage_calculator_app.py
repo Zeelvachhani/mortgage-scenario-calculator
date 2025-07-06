@@ -117,7 +117,7 @@ def amortization_schedule(loan_amt, interest_rate, loan_term):
 
 # --- Main App Tabs ---
 st.title("🏡 Mortgage Scenario Dashboard")
-tab1, tab2, tab3 = st.tabs(["📊 Scenario Analysis", "📈 Loan Analysis", "📉 Amortization Analysis"])
+tab1, tab2, tab3 = st.tabs(["📊 Scenario Analysis", "📈 Loan Analysis", "📊 Amortization Analysis"])
 
 required_fields = [home_price, interest_rate_base, max_dti, annual_income, cash_available]
 
@@ -192,21 +192,6 @@ if calculate and all(field is not None and field > 0 for field in required_field
                 height=500 if len(df) > 12 else None
             )
 
-            st.subheader("📈 Monthly Payment vs Down Payment % by Discount Points")
-            fig, ax = plt.subplots(figsize=(10, 5))
-            for points in df["Discount Points"].unique():
-                subset = df[df["Discount Points"] == points]
-                ax.plot(subset["Down %"], subset["Total Monthly $"], marker='o', label=f"{points} points")
-            ax.set_xlabel("Down Payment %")
-            ax.set_ylabel("Total Monthly Payment $")
-            ax.set_title("Monthly Payment vs Down Payment %")
-            ax.legend(title="Discount Points")
-            ax.grid(True)
-            st.pyplot(fig)
-
-            csv = df.to_csv(index=False).encode('utf-8')
-            st.download_button("⬇️ Download Scenarios as CSV", data=csv, file_name="mortgage_scenarios.csv", mime="text/csv")
-
         with tab2:
             st.subheader("📈 Loan Analysis (30-Year Term)")
             df_loan = loan_details_table(df.copy())
@@ -216,7 +201,7 @@ if calculate and all(field is not None and field > 0 for field in required_field
             st.dataframe(df_loan.style.format(fmt).set_properties(**{'text-align': 'center'}), height=500 if len(df_loan) > 12 else None)
 
         with tab3:
-            st.subheader("📉 Amortization Schedule by Year")
+            st.subheader("📊 Amortization Schedule by Year")
 
             # Generate amortization schedule for each loan scenario
             amortization_data = []
@@ -240,6 +225,23 @@ if calculate and all(field is not None and field > 0 for field in required_field
                 "Total Interest Paid $": "${:,.0f}",
                 "Remaining Balance $": "${:,.0f}"
             }).set_properties(**{'text-align': 'center'}), height=500 if len(df_amortization) > 12 else None)
+
+            # Chart for Remaining Balance and Interest Paid
+            fig, ax1 = plt.subplots(figsize=(10, 5))
+            color = 'tab:blue'
+            ax1.set_xlabel('Year')
+            ax1.set_ylabel('Remaining Balance $', color=color)
+            ax1.plot(df_amortization['Year'], df_amortization['Remaining Balance $'], color=color, label='Remaining Balance')
+            ax1.tick_params(axis='y', labelcolor=color)
+
+            ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+            color = 'tab:red'
+            ax2.set_ylabel('Interest Paid $', color=color)  # we already handled x-label with ax1
+            ax2.plot(df_amortization['Year'], df_amortization['Total Interest Paid $'], color=color, label='Interest Paid')
+            ax2.tick_params(axis='y', labelcolor=color)
+
+            fig.tight_layout()  # make sure there is no clipping
+            st.pyplot(fig)
 
             # Add option to download the amortization schedule
             csv_amortization = df_amortization.to_csv(index=False).encode('utf-8')
