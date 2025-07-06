@@ -271,8 +271,12 @@ if calculate and all(field is not None and field > 0 for field in required_field
                 yearly_schedule = amortization_schedule(loan_amt, rate, loan_term)
                 for year_data in yearly_schedule:
                     amortization_data.append({
-                        "Loan ID": len(amortization_data) + 1,  
+                        "Loan ID": len(amortization_data) + 1,  # Numeric Loan ID
                         "Year": year_data["Year"],
+                        "Home Price $": round(home_price),  # Home Price formatted to 0 decimal places
+                        "Loan Amount $": round(loan_amt),  # Loan Amount formatted to 0 decimal places
+                        "Down Payment $": round(down_payment),  # Down Payment formatted to 0 decimal places
+                        "PMI $": round(pmi, 2),  # PMI formatted to 2 decimal places
                         "Total Principal Paid $": year_data["Total Principal Paid $"],
                         "Total Interest Paid $": year_data["Total Interest Paid $"],
                         "Remaining Balance $": year_data["Remaining Balance $"]
@@ -285,6 +289,10 @@ if calculate and all(field is not None and field > 0 for field in required_field
             df_amortization.index = range(1, len(df_amortization) + 1)
             
             st.dataframe(df_amortization.style.format({
+                "Home Price $": "${:,.0f}",  # Home Price formatted to 0 decimals
+                "Loan Amount $": "${:,.0f}",  # Loan Amount formatted to 0 decimals
+                "Down Payment $": "${:,.0f}",  # Down Payment formatted to 0 decimals
+                "PMI $": "${:,.2f}",  # PMI formatted to 2 decimals
                 "Total Principal Paid $": "${:,.0f}",
                 "Total Interest Paid $": "${:,.0f}",
                 "Remaining Balance $": "${:,.0f}"
