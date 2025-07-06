@@ -271,7 +271,7 @@ if calculate and all(field is not None and field > 0 for field in required_field
                 yearly_schedule = amortization_schedule(loan_amt, rate, loan_term)
                 for year_data in yearly_schedule:
                     amortization_data.append({
-                        "Loan ID": f"Loan {i+1}",
+                        "Loan ID": len(amortization_data) + 1,  
                         "Year": year_data["Year"],
                         "Total Principal Paid $": year_data["Total Principal Paid $"],
                         "Total Interest Paid $": year_data["Total Interest Paid $"],
@@ -280,7 +280,10 @@ if calculate and all(field is not None and field > 0 for field in required_field
 
             # Create a DataFrame for amortization schedule
             df_amortization = pd.DataFrame(amortization_data)
+
+            # Ensure the first column in df_amortization is 1-based index
             df_amortization.index = range(1, len(df_amortization) + 1)
+            
             st.dataframe(df_amortization.style.format({
                 "Total Principal Paid $": "${:,.0f}",
                 "Total Interest Paid $": "${:,.0f}",
