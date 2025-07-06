@@ -276,19 +276,19 @@ if calculate and all(field is not None and field > 0 for field in required_field
             
                 yearly_schedule = amortization_schedule(loan_amt, rate, loan_term)
             
-                for year_data in yearly_schedule:
+            for year_data in yearly_schedule:
                 amortization_data.append({
                     "Loan ID": loan_id,
-                    "Year": year_data["Year"],
                     "Home Price $": round(home_price),
                     "Loan Amount $": round(loan_amt),
                     "Down Payment $": round(down_payment),
                     "PMI $": pmi,
+                    "Year": year_data["Year"],
                     "Total Principal Paid $": year_data["Total Principal Paid $"],
                     "Total Interest Paid $": year_data["Total Interest Paid $"],
                     "Remaining Balance $": year_data["Remaining Balance $"]
                 })
-                
+
 
             # Create amortization DataFrame
             df_amortization = pd.DataFrame(amortization_data)
