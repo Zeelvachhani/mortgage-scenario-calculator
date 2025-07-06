@@ -20,7 +20,7 @@ def float_input(label, key, placeholder="", steep=1, required=False):
         
 # Required inputs with *
 home_price = float_input("Home Price $", "home_price", "e.g. 300000", steep=10000, required=True)
-hoa = float_input("HOA $", "hoa", "e.g. 250", Steep=10, required=True)
+hoa = float_input("HOA $", "hoa", "e.g. 250", teep=10, required=True)
 property_tax_rate = float_input("Property Tax %", "tax", "e.g. 1.2", steep=0.1, required=True)
 insurance_rate = float_input("Insurance %", "insurance", "e.g. 0.5", steep=0.1, required=True)
 pmi_rate = float_input("PMI %", "pmi", "e.g. 0.5", steep=0.1, required=True)
