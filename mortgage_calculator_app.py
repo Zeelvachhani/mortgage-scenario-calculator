@@ -78,6 +78,27 @@ def amortization_schedule(loan_amt, interest_rate, loan_term):
 
     return yearly_schedule
 
+def loan_details_table(df):
+    records = []
+    for i, row in df.iterrows():
+        loan_amt = row["Loan Amount $"]
+        rate = row["Interest Rate %"] / 100
+        pmt = calculate_monthly_payment(loan_amt, rate, loan_term)
+        pmi = row["PMI $"]
+        total_pmt = pmt + pmi
+
+        yearly_schedule = amortization_schedule(loan_amt, rate, loan_term)
+
+        for year_data in yearly_schedule:
+            record = row.copy()
+            record["Year"] = year_data["Year"]
+            record["Total Principal Paid $"] = year_data["Total Principal Paid $"]
+            record["Total Interest Paid $"] = year_data["Total Interest Paid $"]
+            record["Remaining Balance $"] = year_data["Remaining Balance $"]
+            records.append(record)
+
+    return pd.DataFrame(records)
+
 # --- Main App Tabs ---
 st.title("🏡 Mortgage Scenario Dashboard")
 tab1, tab2, tab3 = st.tabs(["📊 Scenario Analysis", "📈 Loan Analysis", "📊 Amortization Analysis"])
