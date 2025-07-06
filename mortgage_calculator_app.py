@@ -13,8 +13,7 @@ def float_input(label, key, placeholder="", step=1.0, required=False, decimals=2
     if required:
         label += " *"
     fmt = f"%.{decimals}f"
-    return st.sidebar.number_input(label, key=key, step=step, format=fmt)
-
+    return st.sidebar.number_input(label, key=key, step=float(step), format=fmt)
 
 # Required inputs with *
 home_price = float_input("Home Price $", "home_price", "e.g. 300000", step=10000.0, required=True, decimals=0)
