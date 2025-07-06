@@ -267,12 +267,50 @@ if calculate and all(field is not None and field > 0 for field in required_field
                 elif col in ["Discount Points"]:
                     fmt[col] = "{:,.0f}"
 
-            st.dataframe(
-                df_loan.drop(columns=["Loan ID"]).style
-                .format(fmt)
-                .set_properties(**{'text-align': 'center'}),
-                height=500 if len(df_loan) > 12 else None
-             )
+            # Compute dynamic height
+            max_height = "500px" if len(df_loan) > 12 else "auto"
+            
+            # Inject scrollable container and wrapped headers
+            st.markdown(f"""
+                <style>
+                .scroll-table-container {{
+                    max-height: {max_height};
+                    overflow-y: auto;
+                    border: 1px solid #ccc;
+                    padding: 0;
+                }}
+                table {{
+                    width: 100%;
+                    table-layout: fixed;
+                    border-collapse: collapse;
+                }}
+                th {{
+                    word-wrap: break-word;
+                    white-space: normal;
+                    text-align: center;
+                    font-size: 13px;
+                    padding: 6px;
+                    background-color: #f0f0f0;
+                    border: 1px solid #ddd;
+                }}
+                td {{
+                    text-align: center;
+                    font-size: 13px;
+                    padding: 6px;
+                    border: 1px solid #eee;
+                }}
+                </style>
+            """, unsafe_allow_html=True)
+            
+            # Format your DataFrame
+            styled_df = df_loan.drop(columns=["Loan ID"]).copy()
+            for col, f in fmt.items():
+                if col in styled_df.columns:
+                    styled_df[col] = styled_df[col].map(lambda x: f.format(x) if pd.notnull(x) else "")
+            
+            # Show the table in a scrollable container
+            st.markdown(f'<div class="scroll-table-container">{styled_df.to_html(index=True, escape=False)}</div>', unsafe_allow_html=True)
+
            
             csv_loan = df_loan.to_csv(index=False).encode('utf-8')
             st.download_button("⬇️ Download Loan Analysis CSV", data=csv_loan, file_name="loan_analysis.csv", mime="text/csv")
