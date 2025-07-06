@@ -235,6 +235,21 @@ if calculate and all(field is not None and field > 0 for field in required_field
 
         with tab2:
             st.subheader("📈 Loan Analysis (30-Year Term)")
+            st.markdown("""
+                        <style>
+                        /* Wrap headers for Loan Analysis table */
+                        .css-1q2zygl th {
+                            white-space: normal !important;
+                            word-wrap: break-word !important;
+                            text-align: center !important;
+                            vertical-align: middle !important;
+                            max-width: 140px;
+                            font-size: 13px;
+                            padding: 8px;
+                        }
+                        </style>
+                        """, unsafe_allow_html=True)
+
             df_loan = loan_details_table(df.copy())
             df_loan.index = range(1, len(df_loan) + 1)  # Set index starting from 1
             numeric_cols = df_loan.select_dtypes(include='number').columns
