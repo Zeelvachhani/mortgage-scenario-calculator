@@ -87,26 +87,27 @@ def loan_details_table(df):
 # --- Amortization Schedule Function ---
 def amortization_schedule(loan_amount, interest_rate, loan_term):
     """Generate amortization schedule for a given loan."""
+    r = (interest_rate / 100) / 12  # ✅ FIX: Convert to decimal before dividing
     monthly_payment = calculate_monthly_payment(loan_amount, interest_rate, loan_term)
     balance = loan_amount
-    r = interest_rate / 12
     amortization_data = []
 
     for year in range(1, loan_term + 1):
         total_principal_paid = 0
         total_interest_paid = 0
+
         for month in range(12):
             interest_payment = balance * r
             principal_payment = monthly_payment - interest_payment
             balance -= principal_payment
             total_interest_paid += interest_payment
             total_principal_paid += principal_payment
-        
+
         amortization_data.append({
             "Year": year,
-            "Total Principal Paid $": total_principal_paid,
-            "Total Interest Paid $": total_interest_paid,
-            "Remaining Balance $": balance
+            "Total Principal Paid $": round(total_principal_paid),
+            "Total Interest Paid $": round(total_interest_paid),
+            "Remaining Balance $": round(balance)
         })
 
     return amortization_data
