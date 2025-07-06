@@ -205,7 +205,7 @@ if calculate and all(field is not None and field > 0 for field in required_field
             df_loan = loan_details_table(df.copy())
             st.dataframe(df_loan.style.format("${:,.2f}"), height=500 if len(df_loan) > 12 else None)
 
-            # --- Stacked Bar Chart for Total Payment (Principal + Interest) ---
+            # --- Stacked Bar for Total Payment (Principal + Interest) ---
             st.subheader("📊 Total Payment (Principal + Interest) by Loan Term")
             fig, ax = plt.subplots(figsize=(10, 5))
             df_loan[['Home Price $', 'Total Payment in 5 Years (includes PMI if applicable) $',
