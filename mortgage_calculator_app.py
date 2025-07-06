@@ -67,7 +67,7 @@ def loan_details_table(df):
 
         r = rate / 12
 
-        for year in [5, 10, 15]:
+        for year in [5, 10, 15, 20, 25, 30]:
             int_paid, rem_bal = interest_paid(loan_amt, r, pmt, year * 12)
             row[f"Total Payment in {year} Years (includes PMI if applicable) $"] = round(total_pmt * 12 * year)
             row[f"Total Interest in {year} Years $"] = round(int_paid)
@@ -173,36 +173,6 @@ if calculate and all(field is not None and field > 0 for field in required_field
             csv = df.to_csv(index=False).encode('utf-8')
             st.download_button("⬇️ Download Scenarios as CSV", data=csv, file_name="mortgage_scenarios.csv", mime="text/csv")
 
-            st.subheader("📘 How Calculations Work")
-            st.markdown("""
-            **How Monthly P&I is Calculated:**
-
-            The **Principal & Interest (P&I)** part of your mortgage payment is calculated based on the following:
-
-            1. **Loan Amount** (P) = The total amount you're borrowing.
-            2. **Monthly Interest Rate** (r) = The annual interest rate divided by 12.
-            3. **Number of Payments** (n) = The number of months in your loan term (e.g., for a 30-year loan, it’s 360 months).
-
-            The formula is:
-
-            **Monthly P&I = (Loan Amount × Monthly Interest Rate × (1 + Monthly Interest Rate)^n) ÷ ((1 + Monthly Interest Rate)^n - 1)**
-
-            ### Example:
-            - Borrowing $200,000 at 5% for 30 years gives a monthly P&I of ~$1,073.
-
-            **Discount Points:**
-            - Each point equals 1% of your loan amount. More points = lower interest.
-
-            **Closing Costs:**
-            - Estimated as a percentage of the loan amount (based on discount points).
-
-            **DTI (Debt-to-Income Ratio):**
-            - DTI = (Total Monthly Payments + Monthly Liabilities) ÷ Monthly Income
-
-            **Total Monthly Payment:**
-            - Includes P&I, taxes, insurance, HOA, and PMI (if applicable).
-            """)
-
         with tab2:
             st.subheader("📈 Loan Analysis (30-Year Term)")
             df_loan = loan_details_table(df.copy())
@@ -210,10 +180,8 @@ if calculate and all(field is not None and field > 0 for field in required_field
             int_cols = [col for col in numeric_cols if 'Interest' in col or 'Payment' in col or 'Balance' in col or col in ["Home Price $", "Down $", "Loan Amount $", "Discount Points", "Closing Cost $", "Total Cash Used $"]]
             fmt = {col: "${:,.0f}" for col in int_cols}
             st.dataframe(df_loan.style.format(fmt).set_properties(**{'text-align': 'center'}), height=500 if len(df_loan) > 12 else None)
-            csv_loan = df_loan.to_csv(index=False).encode('utf-8')
-            st.download_button("⬇️ Download Loan Analysis CSV", data=csv_loan, file_name="loan_analysis.csv", mime="text/csv")
 
-
+            # --- Remaining Balance vs Interest Paid chart ---
             st.subheader("📊 Remaining Balance & Interest Paid")
             time_years = [5, 10, 15, 20, 25, 30]
             for i, row in df_loan.iterrows():
@@ -237,7 +205,6 @@ if calculate and all(field is not None and field > 0 for field in required_field
 
             csv_loan = df_loan.to_csv(index=False).encode('utf-8')
             st.download_button("⬇️ Download Loan Analysis CSV", data=csv_loan, file_name="loan_analysis.csv", mime="text/csv")
-
 
     else:
         st.warning("No valid scenarios found based on your input.")
