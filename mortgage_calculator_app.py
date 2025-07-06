@@ -117,7 +117,7 @@ def amortization_schedule(loan_amt, interest_rate, loan_term):
 
 # --- Main App Tabs ---
 st.title("🏡 Mortgage Scenario Dashboard")
-tab1, tab2 = st.tabs(["📊 Scenario Analysis", "📈 Loan Analysis"])
+tab1, tab2, tab3 = st.tabs(["📊 Scenario Analysis", "📈 Loan Analysis", "📉 Amortization Analysis"])
 
 required_fields = [home_price, interest_rate_base, max_dti, annual_income, cash_available]
 
@@ -207,36 +207,6 @@ if calculate and all(field is not None and field > 0 for field in required_field
             csv = df.to_csv(index=False).encode('utf-8')
             st.download_button("⬇️ Download Scenarios as CSV", data=csv, file_name="mortgage_scenarios.csv", mime="text/csv")
 
-            st.subheader("📘 How Calculations Work")
-            st.markdown("""
-            **How Monthly P&I is Calculated:**
-
-            The **Principal & Interest (P&I)** part of your mortgage payment is calculated based on the following:
-
-            1. **Loan Amount** (P) = The total amount you're borrowing.
-            2. **Monthly Interest Rate** (r) = The annual interest rate divided by 12.
-            3. **Number of Payments** (n) = The number of months in your loan term (e.g., for a 30-year loan, it’s 360 months).
-
-            The formula is:
-
-            **Monthly P&I = (Loan Amount × Monthly Interest Rate × (1 + Monthly Interest Rate)^n) ÷ ((1 + Monthly Interest Rate)^n - 1)**
-
-            ### Example:
-            - Borrowing $200,000 at 5% for 30 years gives a monthly P&I of ~$1,073.
-
-            **Discount Points:**
-            - Each point equals 1% of your loan amount. More points = lower interest.
-
-            **Closing Costs:**
-            - Estimated as a percentage of the loan amount (based on discount points).
-
-            **DTI (Debt-to-Income Ratio):**
-            - DTI = (Total Monthly Payments + Monthly Liabilities) ÷ Monthly Income
-
-            **Total Monthly Payment:**
-            - Includes P&I, taxes, insurance, HOA, and PMI (if applicable).
-            """)
-
         with tab2:
             st.subheader("📈 Loan Analysis (30-Year Term)")
             df_loan = loan_details_table(df.copy())
@@ -244,6 +214,9 @@ if calculate and all(field is not None and field > 0 for field in required_field
             int_cols = [col for col in numeric_cols if 'Interest' in col or 'Payment' in col or 'Balance' in col or col in ["Home Price $", "Down $", "Loan Amount $", "Discount Points", "Closing Cost $", "Total Cash Used $"]]
             fmt = {col: "${:,.0f}" for col in int_cols}
             st.dataframe(df_loan.style.format(fmt).set_properties(**{'text-align': 'center'}), height=500 if len(df_loan) > 12 else None)
+
+        with tab3:
+            st.subheader("📉 Amortization Schedule by Year")
 
             # Generate amortization schedule for each loan scenario
             amortization_data = []
@@ -262,7 +235,6 @@ if calculate and all(field is not None and field > 0 for field in required_field
 
             # Create a DataFrame for amortization schedule
             df_amortization = pd.DataFrame(amortization_data)
-            st.subheader("📊 Amortization Schedule by Year")
             st.dataframe(df_amortization.style.format({
                 "Total Principal Paid $": "${:,.0f}",
                 "Total Interest Paid $": "${:,.0f}",
