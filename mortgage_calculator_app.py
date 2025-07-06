@@ -233,15 +233,20 @@ if calculate and all(field is not None and field > 0 for field in required_field
             highest_discount_points = df.loc[df["Discount Points"].idxmax()]
             lowest_monthly_pni = df.loc[df["Monthly P&I $"].idxmin()]
             
-            scenarios = [highest_down_payment, lowest_interest_rate, highest_discount_points, lowest_monthly_pni]
+            # Assign specific labels to each scenario
+            scenarios = [
+                (highest_down_payment, "Highest Down Payment", 'blue'),
+                (lowest_interest_rate, "Lowest Interest Rate", 'green'),
+                (highest_discount_points, "Highest Discount Points", 'orange'),
+                (lowest_monthly_pni, "Lowest Monthly P&I", 'red')
+            ]
             
             fig, ax1 = plt.subplots(figsize=(10, 5))
-            color = 'tab:blue'
             ax1.set_xlabel('Year')
-            ax1.set_ylabel('Remaining Balance $', color=color)
+            ax1.set_ylabel('Remaining Balance $', color='tab:blue')
             
             # Plot lines for the selected scenarios (Remaining Balance)
-            for scenario in scenarios:
+            for scenario, label, color in scenarios:
                 loan_amt = scenario["Loan Amount $"]
                 rate = scenario["Interest Rate %"] / 100
                 yearly_schedule = amortization_schedule(loan_amt, rate, loan_term)
@@ -249,17 +254,17 @@ if calculate and all(field is not None and field > 0 for field in required_field
                 ax1.plot(
                     [year_data["Year"] for year_data in yearly_schedule],
                     [year_data["Remaining Balance $"] for year_data in yearly_schedule],
-                    label=f"Loan ID {scenario.get('Loan ID', 'N/A')} Remaining Balance"
+                    label=label,  # Use the label for legend
+                    color=color
                 )
             
-            ax1.tick_params(axis='y', labelcolor=color)
+            ax1.tick_params(axis='y', labelcolor='tab:blue')
             
             ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
-            color = 'tab:red'
-            ax2.set_ylabel('Interest Paid $', color=color)
+            ax2.set_ylabel('Interest Paid $', color='tab:red')
             
             # Plot lines for interest paid
-            for scenario in scenarios:
+            for scenario, label, color in scenarios:
                 loan_amt = scenario["Loan Amount $"]
                 rate = scenario["Interest Rate %"] / 100
                 yearly_schedule = amortization_schedule(loan_amt, rate, loan_term)
@@ -267,29 +272,32 @@ if calculate and all(field is not None and field > 0 for field in required_field
                 ax2.plot(
                     [year_data["Year"] for year_data in yearly_schedule],
                     [year_data["Total Interest Paid $"] for year_data in yearly_schedule],
-                    label=f"Loan ID {scenario.get('Loan ID', 'N/A')} Interest Paid",
-                    linestyle='--'
+                    label=f"{label} Interest Paid",  # Add Interest Paid to the label
+                    color=color,
+                    linestyle='--'  # Dashed lines for interest paid
                 )
             
-            ax2.tick_params(axis='y', labelcolor=color)
+            ax2.tick_params(axis='y', labelcolor='tab:red')
             
-            # Avoid repeating legend entries by combining the labels for remaining balance and interest paid
-            lines_remaining, labels_remaining = ax1.get_legend_handles_labels()
-            lines_interest, labels_interest = ax2.get_legend_handles_labels()
+            # Combine the legend for both axes
+            lines, labels = ax1.get_legend_handles_labels()
+            lines2, labels2 = ax2.get_legend_handles_labels()
             
-            # Combine the legend handles and labels
-            lines = lines_remaining + lines_interest
-            labels = labels_remaining + labels_interest
+            # Combine both handles and labels, ensuring they don't repeat
+            lines += lines2
+            labels += labels2
             
-            # Remove duplicates by creating a set of labels
+            # Set unique labels
             unique_labels = list(dict.fromkeys(labels))
             
-            # Apply the combined legend
             fig.tight_layout()  # make sure there is no clipping
-            ax1.legend(lines, unique_labels, loc='upper left')
-            ax2.legend(lines, unique_labels, loc='upper right')
+            
+            # Apply the combined legend
+            ax1.legend(lines, unique_labels, loc='upper left', bbox_to_anchor=(1, 1))
+            ax2.legend(lines, unique_labels, loc='upper right', bbox_to_anchor=(1, 1))
             
             st.pyplot(fig)
+
 
 
             # Add option to download the amortization schedule
