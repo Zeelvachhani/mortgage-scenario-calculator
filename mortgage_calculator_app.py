@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from datetime import datetime
 
 st.set_page_config(page_title="Mortgage Scenario Dashboard", layout="wide")
 
@@ -82,7 +83,7 @@ def loan_details_table(df):
 
 # --- Main App Tabs ---
 st.title("🏡 Mortgage Scenario Dashboard")
-tab1, tab2 = st.tabs(["📊 Scenario Analysis", "📈 Loan Analysis"])
+tab1, tab2, tab3 = st.tabs(["📊 Scenario Analysis", "📈 Loan Analysis", "📉 Rate Forecast (10-Year)"])
 
 required_fields = [home_price, interest_rate_base, max_dti, annual_income, cash_available]
 
@@ -211,6 +212,25 @@ if calculate and all(field is not None and field > 0 for field in required_field
             st.dataframe(df_loan.style.format(fmt).set_properties(**{'text-align': 'center'}), height=500 if len(df_loan) > 12 else None)
             csv_loan = df_loan.to_csv(index=False).encode('utf-8')
             st.download_button("⬇️ Download Loan Analysis CSV", data=csv_loan, file_name="loan_analysis.csv", mime="text/csv")
+
+        with tab3:
+            st.subheader("📉 Mortgage Rate Forecast (10-Year)")
+            current_year = datetime.now().year
+            years = list(range(current_year, current_year + 11))
+            simulated_trend = np.linspace(6.8, 5.2, len(years)) + np.random.normal(0, 0.1, len(years))
+            fig, ax = plt.subplots(figsize=(10, 4))
+            ax.plot(years, simulated_trend, marker='o', linestyle='-', color='teal', label='Forecasted Mortgage Rate')
+            ax.axhline(2.0, color='gray', linestyle='--', label='Fed Inflation Target (2%)')
+            ax.set_title("Simulated Mortgage Rate Forecast (2025–2035)")
+            ax.set_xlabel("Year")
+            ax.set_ylabel("Interest Rate %")
+            ax.grid(True)
+            ax.legend()
+            st.pyplot(fig)
+
+            st.markdown("""
+            > 📊 *Note: This chart is based on simulated forecast data for educational purposes. Real-world rates may differ.*
+            """)
 
     else:
         st.warning("No valid scenarios found based on your input.")
