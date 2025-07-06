@@ -263,15 +263,23 @@ if calculate and all(field is not None and field > 0 for field in required_field
         with tab3:
             st.subheader("📉 Amortization Schedule by Year")
 
-            # Generate amortization schedule for each loan scenario
+            # Generating amortization data with unique Loan ID for each loan scenario
             amortization_data = []
             for i, row in df.iterrows():
                 loan_amt = row["Loan Amount $"]
+                home_price = row["Home Price $"]
+                down_payment = home_price - loan_amt
+                pmi = (loan_amt * pmi_rate / 12) if down_payment / home_price < 0.20 else 0  # PMI if down payment is less than 20%
+            
                 rate = row["Interest Rate %"] / 100
                 yearly_schedule = amortization_schedule(loan_amt, rate, loan_term)
+                
+                # Add a unique Loan ID for each loan scenario
+                loan_id = i + 1  # Assign Loan ID starting from 1 for each loan scenario
+                
                 for year_data in yearly_schedule:
                     amortization_data.append({
-                        "Loan ID": len(amortization_data) + 1,  # Numeric Loan ID
+                        "Loan ID": loan_id,  # Unique Loan ID for each loan scenario
                         "Home Price $": round(home_price),  # Home Price formatted to 0 decimal places
                         "Loan Amount $": round(loan_amt),  # Loan Amount formatted to 0 decimal places
                         "Down Payment $": round(down_payment),  # Down Payment formatted to 0 decimal places
@@ -281,13 +289,13 @@ if calculate and all(field is not None and field > 0 for field in required_field
                         "Total Interest Paid $": year_data["Total Interest Paid $"],
                         "Remaining Balance $": year_data["Remaining Balance $"]
                     })
-
-            # Create a DataFrame for amortization schedule
-            df_amortization = pd.DataFrame(amortization_data)
-
-            # Ensure the first column in df_amortization is 1-based index
-            df_amortization.index = range(1, len(df_amortization) + 1)
             
+            # Create the DataFrame with the updated columns
+            df_amortization = pd.DataFrame(amortization_data)
+            
+            # Ensure the first column in df_amortization is 1-based index (starting from 1)
+            df_amortization.index = range(1, len(df_amortization) + 1)  # Starts from 1
+                        
             st.dataframe(df_amortization.style.format({
                 "Home Price $": "${:,.0f}",  # Home Price formatted to 0 decimals
                 "Loan Amount $": "${:,.0f}",  # Loan Amount formatted to 0 decimals
