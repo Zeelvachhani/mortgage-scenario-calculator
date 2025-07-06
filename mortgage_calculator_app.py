@@ -215,13 +215,15 @@ if calculate and all(field is not None and field > 0 for field in required_field
 
         with tab3:
             st.subheader("📉 Mortgage Rate Forecast (10-Year)")
+            st.markdown("Adjust the future interest rate trend using the slider below.")
+            end_rate = st.slider("Expected Mortgage Rate in 10 Years (%)", min_value=3.0, max_value=8.0, value=5.2, step=0.1)
             current_year = datetime.now().year
             years = list(range(current_year, current_year + 11))
-            simulated_trend = np.linspace(6.8, 5.2, len(years)) + np.random.normal(0, 0.1, len(years))
+            simulated_trend = np.linspace(6.8, end_rate, len(years)) + np.random.normal(0, 0.1, len(years))
             fig, ax = plt.subplots(figsize=(10, 4))
             ax.plot(years, simulated_trend, marker='o', linestyle='-', color='teal', label='Forecasted Mortgage Rate')
             ax.axhline(2.0, color='gray', linestyle='--', label='Fed Inflation Target (2%)')
-            ax.set_title("Simulated Mortgage Rate Forecast (2025–2035)")
+            ax.set_title("Simulated Mortgage Rate Forecast ({}–{})".format(current_year, current_year + 10))
             ax.set_xlabel("Year")
             ax.set_ylabel("Interest Rate %")
             ax.grid(True)
@@ -229,7 +231,7 @@ if calculate and all(field is not None and field > 0 for field in required_field
             st.pyplot(fig)
 
             st.markdown("""
-            > 📊 *Note: This chart is based on simulated forecast data for educational purposes. Real-world rates may differ.*
+            > 📊 *Note: This chart is based on simulated forecast data for educational purposes using historical trends and does not guarantee future outcomes.*
             """)
 
     else:
