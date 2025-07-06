@@ -244,7 +244,7 @@ if calculate and all(field is not None and field > 0 for field in required_field
                     fmt[col] = "${:,.2f}"
                 elif col in ["Down %", "Interest Rate %", "DTI %"]:
                     fmt[col] = "{:,.2f}%"
-                elif col in ["Loan Amount $", "Down $", "Closing Cost $", "Total Cash Used $", 
+                elif col in ["Home Price $", "Loan Amount $", "Down $", "Closing Cost $", "Total Cash Used $", 
                              "Total Payment (includes PMI if applicable) $", "Total Interest $"] or \
                      "Payment" in col or "Interest" in col or "Balance" in col:
                     fmt[col] = "${:,.0f}"
