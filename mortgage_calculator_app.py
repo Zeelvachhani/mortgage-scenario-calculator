@@ -280,6 +280,7 @@ if calculate and all(field is not None and field > 0 for field in required_field
 
             # Create a DataFrame for amortization schedule
             df_amortization = pd.DataFrame(amortization_data)
+            df_amortization.index = range(1, len(df_amortization) + 1)
             st.dataframe(df_amortization.style.format({
                 "Total Principal Paid $": "${:,.0f}",
                 "Total Interest Paid $": "${:,.0f}",
