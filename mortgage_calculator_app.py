@@ -84,7 +84,7 @@ def loan_details_table(df):
 
 # --- Main App Tabs ---
 st.title("🏡 Mortgage Scenario Dashboard")
-tab1, tab2 = st.tabs(["📊 Scenario Analysis", "📈 Loan Calculator"])
+tab1, tab2 = st.tabs(["📊 Scenario Analysis", "📈 Loan Analysis"])
 
 required_fields = [home_price, interest_rate_base, max_dti, annual_income, cash_available]
 
