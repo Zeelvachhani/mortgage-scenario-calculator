@@ -269,41 +269,50 @@ if calculate and all(field is not None and field > 0 for field in required_field
 
             # Compute dynamic height
             max_height = "600px" if len(df_loan) > 15 else "auto"
+
+
+            st.dataframe(
+                df_loan.drop(columns=["Loan ID"]).style
+                .format(fmt)
+                .set_properties(**{'text-align': 'center'}),
+                height=500 if len(df_loan) > 12 else None
+             )
+           
             
             # Inject scrollable container and wrapped headers
-            st.markdown(f"""
-                <style>
-                .scroll-table-container {{
-                    max-height: {max_height};
-                    overflow-y: auto;
-                    border: 1px solid #ccc;
-                    padding: 0;
-                }}
-                table {{
-                    width: 100%;
-                    table-layout: auto;
-                    border-collapse: collapse;
-                }}
-                th {{
-                    word-wrap: break-word;
-                    white-space: normal;
-                    text-align: center !important; 
-                    vertical-align: middle !important;
-                    font-size: 13px;
-                    padding: 6px;
-                    background-color: #f0f0f0;
-                    border: 1px solid #ddd;
-                    min-width: 140px;
-                }}
-                td {{
-                    text-align: center;
-                    font-size: 13px;
-                    padding: 6px;
-                    border: 1px solid #eee;
-                    min-width: 140px;
-                }}
-                </style>
-            """, unsafe_allow_html=True)
+            # st.markdown(f"""
+            #     <style>
+            #     .scroll-table-container {{
+            #         max-height: {max_height};
+            #         overflow-y: auto;
+            #         border: 1px solid #ccc;
+            #         padding: 0;
+            #     }}
+            #     table {{
+            #         width: 100%;
+            #         table-layout: auto;
+            #         border-collapse: collapse;
+            #     }}
+            #     th {{
+            #         word-wrap: break-word;
+            #         white-space: normal;
+            #         text-align: center !important; 
+            #         vertical-align: middle !important;
+            #         font-size: 13px;
+            #         padding: 6px;
+            #         background-color: #f0f0f0;
+            #         border: 1px solid #ddd;
+            #         min-width: 140px;
+            #     }}
+            #     td {{
+            #         text-align: center;
+            #         font-size: 13px;
+            #         padding: 6px;
+            #         border: 1px solid #eee;
+            #         min-width: 140px;
+            #     }}
+            #     </style>
+            # """, unsafe_allow_html=True)
             
             # Format your DataFrame
             styled_df = df_loan.drop(columns=["Loan ID"]).copy()
