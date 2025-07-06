@@ -223,10 +223,9 @@ if calculate and all(field is not None and field > 0 for field in required_field
             st.subheader("📉 Remaining Balance Over Time")
             fig, ax = plt.subplots(figsize=(10, 5))
             for index, row in df_loan.iterrows():
-                ax.plot([5, 10, 15, 30], [row['Remaining Balance end of Year 5 $'], 
-                                         row['Remaining Balance end of Year 10 $'],
-                                         row['Remaining Balance end of Year 15 $'],
-                                         row['Remaining Balance end of Year 30 $']], label=f"Loan {index+1}")
+                ax.plot([5, 10, 15], [row['Remaining Balance end of Year 5 $'], 
+                                     row['Remaining Balance end of Year 10 $'],
+                                     row['Remaining Balance end of Year 15 $']], label=f"Loan {index+1}")
             ax.set_xlabel('Years')
             ax.set_ylabel('Remaining Balance ($)')
             ax.set_title('Remaining Balance Over Time')
