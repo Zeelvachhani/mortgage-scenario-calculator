@@ -46,40 +46,24 @@ def calculate_monthly_payment(loan_amount, interest_rate, years):
         return loan_amount / n
     return loan_amount * r * (1 + r) ** n / ((1 + r) ** n - 1)
 
-def loan_details_table(df):
-    def interest_paid(loan, r, pmt, months):
-        balance = loan
-        interest = 0
-        for _ in range(months):
-            int_paid = balance * r
-            principal = pmt - int_paid
-            balance -= principal
-            interest += int_paid
-        return interest, balance
+def amortization_schedule(loan_amt, rate, term_years):
+    r = rate / 12
+    n = term_years * 12
+    balance = loan_amt
+    schedule = []
 
-    records = []
-    for i, row in df.iterrows():
-        loan_amt = row["Loan Amount $"]
-        rate = row["Interest Rate %"] / 100
-        pmt = calculate_monthly_payment(loan_amt, rate, 30)
-        pmi = row["PMI $"]
-        total_pmt = pmt + pmi
+    for month in range(1, n + 1):
+        interest_payment = balance * r
+        principal_payment = calculate_monthly_payment(loan_amt, rate, term_years) - interest_payment
+        balance -= principal_payment
+        schedule.append({
+            'Month': month,
+            'Principal Payment $': round(principal_payment, 2),
+            'Interest Payment $': round(interest_payment, 2),
+            'Remaining Balance $': round(balance, 2)
+        })
 
-        r = rate / 12
-
-        for year in [5, 10, 15, 20, 25, 30]:
-            int_paid, rem_bal = interest_paid(loan_amt, r, pmt, year * 12)
-            row[f"Total Payment in {year} Years (includes PMI if applicable) $"] = round(total_pmt * 12 * year)
-            row[f"Total Interest in {year} Years $"] = round(int_paid)
-            row[f"Remaining Balance end of Year {year} $"] = round(rem_bal)
-
-        total_int, _ = interest_paid(loan_amt, r, pmt, 30 * 12)
-        row["Total Payment (includes PMI if applicable) $"] = round(total_pmt * 360)
-        row["Total Interest $"] = round(total_int)
-        row["Loan ID"] = f"Loan {i+1}"
-        records.append(row)
-
-    return pd.DataFrame(records)
+    return pd.DataFrame(schedule)
 
 # --- Main App Tabs ---
 st.title("🏡 Mortgage Scenario Dashboard")
@@ -179,7 +163,19 @@ if calculate and all(field is not None and field > 0 for field in required_field
             numeric_cols = df_loan.select_dtypes(include='number').columns
             int_cols = [col for col in numeric_cols if 'Interest' in col or 'Payment' in col or 'Balance' in col or col in ["Home Price $", "Down $", "Loan Amount $", "Discount Points", "Closing Cost $", "Total Cash Used $"]]
             fmt = {col: "${:,.0f}" for col in int_cols}
-            st.dataframe(df_loan.style.format(fmt).set_properties(**{'text-align': 'center'}), height=500 if len(df_loan) > 12 else None)
+
+            # Generate amortization table for hidden use
+            amortization_data = []
+            for _, row in df_loan.iterrows():
+                loan_amt = row["Loan Amount $"]
+                rate = row["Interest Rate %"] / 100
+                schedule = amortization_schedule(loan_amt, rate, loan_term)
+
+                # Store this hidden amortization data
+                amortization_data.append(schedule)
+
+            # Hidden data, will not be displayed
+            st.empty()  # Hides the table for amortization
 
             # --- Remaining Balance vs Interest Paid chart ---
             st.subheader("📊 Remaining Balance & Interest Paid")
