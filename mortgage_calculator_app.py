@@ -38,7 +38,6 @@ max_down_pct = float_input("Max Down Payment %", "max_dp", "e.g. 20")
 max_monthly_expense = float_input("Max Monthly Expense $", "max_exp", "e.g. 2200")
 
 calculate = st.sidebar.button("🔄 Calculate Scenarios")
-calculate = st.sidebar.button("🔄 Calculate Scenarios")
 
 # --- Helper Functions ---
 def calculate_monthly_payment(loan_amount, interest_rate, years):
