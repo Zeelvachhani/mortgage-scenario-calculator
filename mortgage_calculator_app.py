@@ -136,7 +136,8 @@ if calculate and all(field is not None and field > 0 for field in required_field
                 })
 
     if results:
-        df = pd.DataFrame(results)
+        df = pd.DataFrame(results).reset_index(drop=True)
+        df.index += 1
 
         with tab1:
             st.subheader("📊 Scenario Results")
@@ -152,7 +153,7 @@ if calculate and all(field is not None and field > 0 for field in required_field
                 "Monthly P&I $": "${:.2f}",
                 "Total Monthly $": "${:.2f}",
                 "DTI %": "{:.2f}%",
-            }), height=400)
+            }), height=600)
 
             st.subheader("📈 Monthly Payment vs Down Payment % by Discount Points")
             fig, ax = plt.subplots(figsize=(10, 5))
@@ -202,7 +203,7 @@ if calculate and all(field is not None and field > 0 for field in required_field
         with tab2:
             st.subheader("📈 Loan Analysis (30-Year Term)")
             df_loan = loan_details_table(df.copy())
-            st.dataframe(df_loan.style.format("${:,.2f}"), height=500)
+            st.dataframe(df_loan.style.format("${:,.2f}"), height=600)
             csv_loan = df_loan.to_csv(index=False).encode('utf-8')
             st.download_button("⬇️ Download Loan Analysis CSV", data=csv_loan, file_name="loan_analysis.csv", mime="text/csv")
 
