@@ -18,29 +18,26 @@ def float_input(label, key, placeholder="", required=False):
     except:
         return None
 
+# Required inputs with *
 home_price = float_input("Home Price $", "home_price", "e.g. 300000", required=True)
-hoa = float_input("HOA $", "hoa", "e.g. 250")
-property_tax_rate = float_input("Property Tax %", "tax", "e.g. 1.2")
-insurance_rate = float_input("Insurance %", "insurance", "e.g. 0.5")
-pmi_rate = float_input("PMI %", "pmi", "e.g. 0.5")
+hoa = float_input("HOA $", "hoa", "e.g. 250", required=True)
+property_tax_rate = float_input("Property Tax %", "tax", "e.g. 1.2", required=True)
+insurance_rate = float_input("Insurance %", "insurance", "e.g. 0.5", required=True)
+pmi_rate = float_input("PMI %", "pmi", "e.g. 0.5", required=True)
 
 cash_available = float_input("Cash Available $", "cash", "e.g. 80000", required=True)
-min_down_pct = float_input("Min Down Payment %", "min_dp", "e.g. 5")
-max_down_pct = float_input("Max Down Payment %", "max_dp", "e.g. 20")
-
 interest_rate_base = float_input("Interest Rate %", "rate", "e.g. 5", required=True)
-loan_term = st.sidebar.number_input("Loan Term (Years) *", min_value=1, max_value=40, value=30)
-
-monthly_liability = float_input("Monthly Liability $", "liability", "e.g. 500")
+monthly_liability = float_input("Monthly Liability $", "liability", "e.g. 500", required=True)
 annual_income = float_input("Annual Income $", "income", "e.g. 85000", required=True)
 max_dti = float_input("Max DTI %", "dti", "e.g. 36", required=True)
+loan_term = st.sidebar.number_input("Loan Term (Years) *", min_value=1, max_value=40, value=30)
+
+# Optional inputs (no *)
+min_down_pct = float_input("Min Down Payment %", "min_dp", "e.g. 5")
+max_down_pct = float_input("Max Down Payment %", "max_dp", "e.g. 20")
 max_monthly_expense = float_input("Max Monthly Expense $", "max_exp", "e.g. 2200")
 
 calculate = st.sidebar.button("🔄 Calculate Scenarios")
-
-# --- Main App Tabs ---
-st.title("🏡 Mortgage Scenario Dashboard")
-tab1, tab2, tab3 = st.tabs(["📊 Scenario Analysis", "📈 Loan Analysis", "📉 Amortization Analysis"])
 
 # --- Helper Functions ---
 def calculate_monthly_payment(loan_amount, interest_rate, years):
@@ -68,6 +65,7 @@ def loan_details_table(df):
         pmt = calculate_monthly_payment(loan_amt, rate, 30)
         pmi = row["PMI $"]
         total_pmt = pmt + pmi
+
         r = rate / 12
 
         for year in [5, 10, 15]:
@@ -84,31 +82,10 @@ def loan_details_table(df):
 
     return pd.DataFrame(records)
 
-def amortization_schedule(loan_amt, rate, years):
-    schedule = []
-    balance = loan_amt
-    r = rate / 12
-    n = years * 12
-    pmt = calculate_monthly_payment(loan_amt, rate, years)
+# --- Main App Tabs ---
+st.title("🏡 Mortgage Scenario Dashboard")
+tab1, tab2, tab3 = st.tabs(["📊 Scenario Analysis", "📈 Loan Analysis", "📉 Amortization Analysis"])
 
-    for year in range(1, years + 1):
-        interest_paid = 0
-        principal_paid = 0
-        for _ in range(12):
-            interest = balance * r
-            principal = pmt - interest
-            balance -= principal
-            interest_paid += interest
-            principal_paid += principal
-        schedule.append({
-            "Year": year,
-            "Total Principal Paid $": round(principal_paid),
-            "Total Interest Paid $": round(interest_paid),
-            "Remaining Balance $": round(balance)
-        })
-    return schedule
-
-# --- Scenario Calculation ---
 required_fields = [home_price, interest_rate_base, max_dti, annual_income, cash_available]
 
 if calculate and all(field is not None and field > 0 for field in required_fields):
@@ -164,21 +141,25 @@ if calculate and all(field is not None and field > 0 for field in required_field
 
         with tab1:
             st.subheader("📊 Scenario Results")
-            st.dataframe(df.style.format({
-                "Home Price $": "${:,.0f}",
-                "Down %": "{:.2f}%",
-                "Down $": "${:,.0f}",
-                "Loan Amount $": "${:,.0f}",
-                "Interest Rate %": "{:.2f}%",
-                "Discount Points": "{:,.0f}",
-                "Closing Cost $": "${:,.0f}",
-                "PMI $": "${:.2f}",
-                "Total Cash Used $": "${:,.0f}",
-                "Monthly P&I $": "${:.2f}",
-                "Total Monthly $": "${:.2f}",
-                "DTI %": "{:.2f}%"
-            }).set_properties(**{'text-align': 'center'}), height=500 if len(df) > 12 else None)
+            st.dataframe(
+                df.style.format({
+                    "Home Price $": "${:,.0f}",
+                    "Down %": "{:.2f}%",
+                    "Down $": "${:,.0f}",
+                    "Loan Amount $": "${:,.0f}",
+                    "Interest Rate %": "{:.2f}%",
+                    "Discount Points": "{:,.0f}",
+                    "Closing Cost $": "${:,.0f}",
+                    "PMI $": "${:.2f}",
+                    "Total Cash Used $": "${:,.0f}",
+                    "Monthly P&I $": "${:.2f}",
+                    "Total Monthly $": "${:.2f}",
+                    "DTI %": "{:.2f}%"
+                }).set_properties(**{'text-align': 'center'}),
+                height=500 if len(df) > 12 else None
+            )
 
+            st.subheader("📈 Monthly Payment vs Down Payment % by Discount Points")
             fig, ax = plt.subplots(figsize=(10, 5))
             for points in df["Discount Points"].unique():
                 subset = df[df["Discount Points"] == points]
@@ -193,74 +174,87 @@ if calculate and all(field is not None and field > 0 for field in required_field
             csv = df.to_csv(index=False).encode('utf-8')
             st.download_button("⬇️ Download Scenarios as CSV", data=csv, file_name="mortgage_scenarios.csv", mime="text/csv")
 
+            st.subheader("📘 How Calculations Work")
+            st.markdown("""
+            **How Monthly P&I is Calculated:**
+
+            The **Principal & Interest (P&I)** part of your mortgage payment is calculated based on the following:
+
+            1. **Loan Amount** (P) = The total amount you're borrowing.
+            2. **Monthly Interest Rate** (r) = The annual interest rate divided by 12.
+            3. **Number of Payments** (n) = The number of months in your loan term (e.g., for a 30-year loan, it’s 360 months).
+
+            The formula is:
+
+            **Monthly P&I = (Loan Amount × Monthly Interest Rate × (1 + Monthly Interest Rate)^n) ÷ ((1 + Monthly Interest Rate)^n - 1)**
+
+            ### Example:
+            - Borrowing $200,000 at 5% for 30 years gives a monthly P&I of ~$1,073.
+
+            **Discount Points:**
+            - Each point equals 1% of your loan amount. More points = lower interest.
+
+            **Closing Costs:**
+            - Estimated as a percentage of the loan amount (based on discount points).
+
+            **DTI (Debt-to-Income Ratio):**
+            - DTI = (Total Monthly Payments + Monthly Liabilities) ÷ Monthly Income
+
+            **Total Monthly Payment:**
+            - Includes P&I, taxes, insurance, HOA, and PMI (if applicable).
+            """)
+
         with tab2:
             st.subheader("📈 Loan Analysis (30-Year Term)")
             df_loan = loan_details_table(df.copy())
             numeric_cols = df_loan.select_dtypes(include='number').columns
-            fmt = {col: "${:,.0f}" for col in numeric_cols if "Payment" in col or "Interest" in col or "Balance" in col or "Amount" in col or "Cost" in col}
+            int_cols = [col for col in numeric_cols if 'Interest' in col or 'Payment' in col or 'Balance' in col or col in ["Home Price $", "Down $", "Loan Amount $", "Discount Points", "Closing Cost $", "Total Cash Used $"]]
+            fmt = {col: "${:,.0f}" for col in int_cols}
             st.dataframe(df_loan.style.format(fmt).set_properties(**{'text-align': 'center'}), height=500 if len(df_loan) > 12 else None)
             csv_loan = df_loan.to_csv(index=False).encode('utf-8')
             st.download_button("⬇️ Download Loan Analysis CSV", data=csv_loan, file_name="loan_analysis.csv", mime="text/csv")
 
+    else:
+        st.warning("No valid scenarios found based on your input.")
+
+elif calculate:
+    st.error("Please fill in all required fields: Home Price, Interest Rate, Annual Income, Max DTI, Cash Available.")
+
         with tab3:
             st.subheader("📉 Amortization Schedule by Year")
+
+            # Generate amortization schedule for each loan scenario
             amortization_data = []
             for i, row in df.iterrows():
-                schedule = amortization_schedule(row["Loan Amount $"], row["Interest Rate %"] / 100, loan_term)
-                for year_data in schedule:
+                loan_amt = row["Loan Amount $"]
+                rate = row["Interest Rate %"] / 100
+                yearly_schedule = amortization_schedule(loan_amt, rate, loan_term)
+                for year_data in yearly_schedule:
                     amortization_data.append({
                         "Loan ID": f"Loan {i+1}",
-                        **year_data
+                        "Year": year_data["Year"],
+                        "Total Principal Paid $": year_data["Total Principal Paid $"],
+                        "Total Interest Paid $": year_data["Total Interest Paid $"],
+                        "Remaining Balance $": year_data["Remaining Balance $"]
                     })
+
+            # Create a DataFrame for amortization schedule
             df_amortization = pd.DataFrame(amortization_data)
             st.dataframe(df_amortization.style.format({
                 "Total Principal Paid $": "${:,.0f}",
                 "Total Interest Paid $": "${:,.0f}",
                 "Remaining Balance $": "${:,.0f}"
-            }).set_properties(**{'text-align': 'center'}), height=500)
+            }).set_properties(**{'text-align': 'center'}), height=500 if len(df_amortization) > 12 else None)
+
+            # Add option to download the amortization schedule
             csv_amortization = df_amortization.to_csv(index=False).encode('utf-8')
             st.download_button("⬇️ Download Amortization Schedule CSV", data=csv_amortization, file_name="amortization_schedule.csv", mime="text/csv")
+
     else:
         st.warning("No valid scenarios found based on your input.")
+
 elif calculate:
     st.error("Please fill in all required fields: Home Price, Interest Rate, Annual Income, Max DTI, Cash Available.")
-
-# --- Enhanced Explanation Section ---
-st.markdown("""
-### 📘 How Calculations Work
-
-#### 🧮 Monthly Principal & Interest (P&I)
-The **monthly mortgage payment** (excluding taxes and fees) is calculated using this formula:
-
-**Monthly P&I = (Loan Amount × Monthly Interest Rate × (1 + Monthly Interest Rate)^n) ÷ ((1 + Monthly Interest Rate)^n - 1)**
-
-Where:
-- **Loan Amount** = Principal borrowed  
-- **Monthly Interest Rate** = Annual Rate ÷ 12  
-- **n** = Total number of payments (loan term × 12)
-
-#### 🔢 Example
-- Borrowing **$200,000** at **5%** for **30 years** results in a monthly P&I of approximately **$1,073**
-
-#### 💸 Discount Points
-- Each point = **1%** of the loan amount  
-  - Example: 2 points on $200,000 = $4,000  
-- **Buying points** reduces your interest rate
-
-#### 💼 Closing Costs
-- Estimated as a **percentage of the loan amount**, based on how many discount points you select
-
-#### 💡 DTI (Debt-to-Income Ratio)
-- **Formula:** (Total Monthly Housing Payment + Monthly Liabilities) ÷ Monthly Income  
-- Lenders prefer a DTI ≤ your maximum allowed (e.g., 36%)
-
-#### 💵 Total Monthly Payment Includes:
-- Principal & Interest  
-- Property Tax  
-- Homeowner’s Insurance  
-- HOA Fees (if any)  
-- PMI (if down payment < 20%)
-""")
 
 # --- Footer ---
 st.markdown("---")
