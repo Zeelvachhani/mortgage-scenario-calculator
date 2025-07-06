@@ -68,13 +68,13 @@ def loan_details_table(df):
 
         for year in [5, 10, 15]:
             int_paid, rem_bal = interest_paid(loan_amt, r, pmt, year * 12)
-            row[f"Total Payment in {year} Years (includes PMI if applicable) $"] = round(total_pmt * 12 * year, 2)
-            row[f"Total Interest in {year} Years $"] = round(int_paid, 2)
-            row[f"Remaining Balance end of Year {year} $"] = round(rem_bal, 2)
+            row[f"Total Payment in {year} Years (includes PMI if applicable) $"] = round(total_pmt * 12 * year)
+            row[f"Total Interest in {year} Years $"] = round(int_paid)
+            row[f"Remaining Balance end of Year {year} $"] = round(rem_bal)
 
         total_int, _ = interest_paid(loan_amt, r, pmt, 30 * 12)
-        row["Total Payment (includes PMI if applicable) $"] = round(total_pmt * 360, 2)
-        row["Total Interest $"] = round(total_int, 2)
+        row["Total Payment (includes PMI if applicable) $"] = round(total_pmt * 360)
+        row["Total Interest $"] = round(total_int)
         row["Loan ID"] = f"Loan {i+1}"
         records.append(row)
 
@@ -139,19 +139,23 @@ if calculate and all(field is not None and field > 0 for field in required_field
 
         with tab1:
             st.subheader("📊 Scenario Results")
-            st.dataframe(df.style.format({
-                "Home Price $": "${:,.0f}",
-                "Down %": "{:.2f}%",
-                "Down $": "${:,.0f}",
-                "Loan Amount $": "${:,.0f}",
-                "Interest Rate %": "{:.2f}%",
-                "Closing Cost $": "${:.2f}",
-                "PMI $": "${:.2f}",
-                "Total Cash Used $": "${:.2f}",
-                "Monthly P&I $": "${:.2f}",
-                "Total Monthly $": "${:.2f}",
-                "DTI %": "{:.2f}%",
-            }), height=500 if len(df) > 12 else None)
+            st.dataframe(
+                df.style.format({
+                    "Home Price $": "${:,.0f}",
+                    "Down %": "{:.2f}%",
+                    "Down $": "${:,.0f}",
+                    "Loan Amount $": "${:,.0f}",
+                    "Interest Rate %": "{:.2f}%",
+                    "Discount Points": "{:,.0f}",
+                    "Closing Cost $": "${:,.0f}",
+                    "PMI $": "${:.2f}",
+                    "Total Cash Used $": "${:,.0f}",
+                    "Monthly P&I $": "${:.2f}",
+                    "Total Monthly $": "${:.2f}",
+                    "DTI %": "{:.2f}%"
+                }).set_properties(**{'text-align': 'center'}),
+                height=500 if len(df) > 12 else None
+            )
 
             st.subheader("📈 Monthly Payment vs Down Payment % by Discount Points")
             fig, ax = plt.subplots(figsize=(10, 5))
@@ -201,7 +205,10 @@ if calculate and all(field is not None and field > 0 for field in required_field
         with tab2:
             st.subheader("📈 Loan Analysis (30-Year Term)")
             df_loan = loan_details_table(df.copy())
-            st.dataframe(df_loan.style.format({col: "${:,.2f}" for col in df_loan.select_dtypes(include='number').columns}), height=500 if len(df_loan) > 12 else None)
+            numeric_cols = df_loan.select_dtypes(include='number').columns
+            int_cols = [col for col in numeric_cols if 'Interest' in col or 'Payment' in col or 'Balance' in col or col in ["Home Price $", "Down $", "Loan Amount $", "Discount Points", "Closing Cost $", "Total Cash Used $"]]
+            fmt = {col: "${:,.0f}" for col in int_cols}
+            st.dataframe(df_loan.style.format(fmt).set_properties(**{'text-align': 'center'}), height=500 if len(df_loan) > 12 else None)
             csv_loan = df_loan.to_csv(index=False).encode('utf-8')
             st.download_button("⬇️ Download Loan Analysis CSV", data=csv_loan, file_name="loan_analysis.csv", mime="text/csv")
 
