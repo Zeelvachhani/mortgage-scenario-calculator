@@ -18,12 +18,6 @@ def float_input(label, key, placeholder="", steep=1, required=False):
     except:
         return None
         
-     if st.sidebar.button(f"➕ Increase by ${Steep:,.0f}"):
-        st.session_state[key] = val + Steep  # Increment by Steep
-    
-    # Return the updated value
-    return st.session_state[key]
-
 # Required inputs with *
 home_price = float_input("Home Price $", "home_price", "e.g. 300000", Steep=10000, required=True)
 hoa = float_input("HOA $", "hoa", "e.g. 250", Steep=10, required=True)
