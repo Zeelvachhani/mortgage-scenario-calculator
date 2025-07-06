@@ -267,16 +267,15 @@ if calculate and all(field is not None and field > 0 for field in required_field
             amortization_data = []
         
             # Loop through each loan scenario
-            for loan_id, row in enumerate(df.itertuples(index=False), start=1):
-                home_price = row._1  # "Home Price $" is first column
-                loan_amt = row._4    # "Loan Amount $" is 4th column
+            for loan_id, row in enumerate(df.to_dict(orient="records"), start=1):
+                home_price = row["Home Price $"]
+                loan_amt = row["Loan Amount $"]
                 down_payment = home_price - loan_amt
-                rate = row._5 / 100  # "Interest Rate %" is 5th column
-                pmi = round(row._8, 2)  # "PMI $" is 8th column
-        
-                # Get amortization for this loan
+                rate = row["Interest Rate %"] / 100
+                pmi = round(row["PMI $"], 2)
+            
                 yearly_schedule = amortization_schedule(loan_amt, rate, loan_term)
-        
+            
                 for year_data in yearly_schedule:
                     amortization_data.append({
                         "Loan ID": loan_id,
@@ -287,9 +286,8 @@ if calculate and all(field is not None and field > 0 for field in required_field
                         "PMI $": pmi,
                         "Total Principal Paid $": year_data["Total Principal Paid $"],
                         "Total Interest Paid $": year_data["Total Interest Paid $"],
-                        "Remaining Balance $": year_data["Remaining Balance $"]
-                    })
-        
+                        "Remaining Balance $": year_data["Remaining
+
             # Create amortization DataFrame
             df_amortization = pd.DataFrame(amortization_data)
             df_amortization.index = range(1, len(df_amortization) + 1)
