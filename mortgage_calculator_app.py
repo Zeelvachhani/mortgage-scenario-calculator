@@ -288,6 +288,7 @@ if calculate and all(field is not None and field > 0 for field in required_field
                     word-wrap: break-word;
                     white-space: normal;
                     text-align: center;
+                    vertical-align: middle;
                     font-size: 13px;
                     padding: 6px;
                     background-color: #f0f0f0;
