@@ -201,7 +201,7 @@ if calculate and all(field is not None and field > 0 for field in required_field
         with tab2:
             st.subheader("📈 Loan Analysis (30-Year Term)")
             df_loan = loan_details_table(df.copy())
-            st.dataframe(df_loan.style.format("${:,.2f}"), height=500 if len(df_loan) > 12 else None)
+            st.dataframe(df_loan.style.format({col: "${:,.2f}" for col in df_loan.select_dtypes(include='number').columns}), height=500 if len(df_loan) > 12 else None)
             csv_loan = df_loan.to_csv(index=False).encode('utf-8')
             st.download_button("⬇️ Download Loan Analysis CSV", data=csv_loan, file_name="loan_analysis.csv", mime="text/csv")
 
