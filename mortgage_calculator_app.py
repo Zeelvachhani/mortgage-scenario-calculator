@@ -205,34 +205,60 @@ if calculate and all(field is not None and field > 0 for field in required_field
             st.download_button("⬇️ Download Scenarios as CSV", data=csv, file_name="mortgage_scenarios.csv", mime="text/csv")
 
             st.subheader("📘 How Calculations Work")
+
             st.markdown("""
-            **How Monthly P&I is Calculated:**
+            #### 📌 Monthly Principal & Interest (P&I)
+            The monthly **Principal & Interest (P&I)** payment is calculated using the standard amortization formula:
 
-            The **Principal & Interest (P&I)** part of your mortgage payment is calculated based on the following:
+            Monthly Payment = (P × r × (1 + r)^n) / ((1 + r)^n - 1)
+                       
+            Where:
+            - **P** = Loan Amount  
+            - **r** = Monthly Interest Rate (Annual Rate ÷ 12)  
+            - **n** = Total Number of Payments (Loan Term in Months)
+            
+            #### 🔍 Example:
+            A loan of **$200,000** at an interest rate of **5%** over a **30-year term** results in an estimated monthly P&I payment of approximately **$1,073**.
+            
+            ---
+            
+            #### 💡 Discount Points
+            - Discount points are optional upfront fees paid to reduce the interest rate on a loan.
+            - In this tool:
+              - **1 point** is equal to **1% of the loan amount**.
+              - Each point reduces the base interest rate by **0.25%**.
+              - More points result in a lower interest rate, but increase initial closing costs.
+              - **Cost = Loan Amount × (Discount Points × 1%)**
+              - **Interest Rate Reduction = Discount Points × 0.25%**
+            
+            ---
+            
+            #### 💰 Closing Costs
+            - Closing costs are estimated as a percentage of the loan amount.
+            - In this model, closing costs are derived from the number of discount points:
+              - **Closing Cost = Loan Amount × (Discount Points × 1%)**
+            
+            ---
+            
+            #### 📊 Debt-to-Income Ratio (DTI)
+            - The **DTI ratio** is a key factor in mortgage qualification.
+            - **Formula:**  
 
-            1. **Loan Amount** (P) = The total amount you're borrowing.
-            2. **Monthly Interest Rate** (r) = The annual interest rate divided by 12.
-            3. **Number of Payments** (n) = The number of months in your loan term (e.g., for a 30-year loan, it’s 360 months).
+            DTI = (Total Monthly Housing Costs + Monthly Liabilities) / Monthly Gross Income
 
-            The formula is:
-
-            **Monthly P&I = (Loan Amount × Monthly Interest Rate × (1 + Monthly Interest Rate)^n) ÷ ((1 + Monthly Interest Rate)^n - 1)**
-
-            ### Example:
-            - Borrowing $200,000 at 5% for 30 years gives a monthly P&I of ~$1,073.
-
-            **Discount Points:**
-            - Each point equals 1% of your loan amount. More points = lower interest.
-
-            **Closing Costs:**
-            - Estimated as a percentage of the loan amount (based on discount points).
-
-            **DTI (Debt-to-Income Ratio):**
-            - DTI = (Total Monthly Payments + Monthly Liabilities) ÷ Monthly Income
-
-            **Total Monthly Payment:**
-            - Includes P&I, taxes, insurance, HOA, and PMI (if applicable).
+            - A lower DTI indicates a more favorable financial position.
+            - Many lenders prefer a DTI of **36% or less**.
+            
+            ---
+            
+            #### 💸 Total Monthly Payment Includes:
+            - **Principal & Interest (P&I)**  
+            - **Property Taxes**  
+            - **Homeowner’s Insurance**  
+            - **HOA Fees** (if applicable)  
+            - **PMI (Private Mortgage Insurance)** — applies when the down payment is less than 20%
             """)
+            
 
         with tab2:
             st.subheader("📈 Loan Analysis (30-Year Term)")
