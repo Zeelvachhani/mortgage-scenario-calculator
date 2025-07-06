@@ -263,48 +263,50 @@ if calculate and all(field is not None and field > 0 for field in required_field
         with tab3:
             st.subheader("📉 Amortization Schedule by Year")
         
-            # Generating amortization data with unique Loan ID for each loan scenario
-        
             amortization_data = []
         
             # Loop through each loan scenario
             for loan_id, row in enumerate(df.itertuples(index=False), start=1):
-                    home_price = row._1  # "Home Price $" is first column
-                    loan_amt = row._4    # "Loan Amount $" is 4th column
-                    down_payment = home_price - loan_amt
-                    rate = row._5 / 100  # "Interest Rate %" is 5th column
-                    pmi = round(row._8, 2)  # "PMI $" is 8th column
-            
-                    yearly_schedule = amortization_schedule(loan_amt, rate, loan_term)
-            
-                    for year_data in yearly_schedule:
-                        amortization_data.append({
-                            "Loan ID": loan_id,
-                            "Year": year_data["Year"],
-                            "Home Price $": round(home_price),
-                            "Loan Amount $": round(loan_amt),
-                            "Down Payment $": round(down_payment),
-                            "PMI $": pmi,
-                            "Total Principal Paid $": year_data["Total Principal Paid $"],
-                            "Total Interest Paid $": year_data["Total Interest Paid $"],
-                            "Remaining Balance $": year_data["Remaining Balance $"]
-                        })
-            
-                df_amortization = pd.DataFrame(amortization_data)
-                df_amortization.index = range(1, len(df_amortization) + 1)
-            
-                st.dataframe(df_amortization.style.format({
-                    "Home Price $": "${:,.0f}",
-                    "Loan Amount $": "${:,.0f}",
-                    "Down Payment $": "${:,.0f}",
-                    "PMI $": "${:,.2f}",
-                    "Total Principal Paid $": "${:,.0f}",
-                    "Total Interest Paid $": "${:,.0f}",
-                    "Remaining Balance $": "${:,.0f}"
-                }).set_properties(**{'text-align': 'center'}), height=500 if len(df_amortization) > 12 else None)
-            
-                csv_amortization = df_amortization.to_csv(index=False).encode('utf-8')
-                st.download_button("⬇️ Download Amortization Schedule CSV", data=csv_amortization, file_name="amortization_schedule.csv", mime="text/csv")
+                home_price = row._1  # "Home Price $" is first column
+                loan_amt = row._4    # "Loan Amount $" is 4th column
+                down_payment = home_price - loan_amt
+                rate = row._5 / 100  # "Interest Rate %" is 5th column
+                pmi = round(row._8, 2)  # "PMI $" is 8th column (already calculated earlier)
+        
+                # Get amortization for this loan
+                yearly_schedule = amortization_schedule(loan_amt, rate, loan_term)
+        
+                for year_data in yearly_schedule:
+                    amortization_data.append({
+                        "Loan ID": loan_id,
+                        "Year": year_data["Year"],
+                        "Home Price $": round(home_price),
+                        "Loan Amount $": round(loan_amt),
+                        "Down Payment $": round(down_payment),
+                        "PMI $": pmi,
+                        "Total Principal Paid $": year_data["Total Principal Paid $"],
+                        "Total Interest Paid $": year_data["Total Interest Paid $"],
+                        "Remaining Balance $": year_data["Remaining Balance $"]
+                    })
+        
+            # After loop: create DataFrame and display results
+            df_amortization = pd.DataFrame(amortization_data)
+            df_amortization.index = range(1, len(df_amortization) + 1)
+        
+            st.dataframe(df_amortization.style.format({
+                "Home Price $": "${:,.0f}",
+                "Loan Amount $": "${:,.0f}",
+                "Down Payment $": "${:,.0f}",
+                "PMI $": "${:,.2f}",
+                "Total Principal Paid $": "${:,.0f}",
+                "Total Interest Paid $": "${:,.0f}",
+                "Remaining Balance $": "${:,.0f}"
+            }).set_properties(**{'text-align': 'center'}), height=500 if len(df_amortization) > 12 else None)
+        
+            # Add option to download
+            csv_amortization = df_amortization.to_csv(index=False).encode('utf-8')
+            st.download_button("⬇️ Download Amortization Schedule CSV", data=csv_amortization, file_name="amortization_schedule.csv", mime="text/csv")
+        
         
     else:
         st.warning("No valid scenarios found based on your input.")
