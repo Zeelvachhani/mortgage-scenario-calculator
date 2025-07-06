@@ -272,11 +272,11 @@ if calculate and all(field is not None and field > 0 for field in required_field
                 for year_data in yearly_schedule:
                     amortization_data.append({
                         "Loan ID": len(amortization_data) + 1,  # Numeric Loan ID
-                        "Year": year_data["Year"],
                         "Home Price $": round(home_price),  # Home Price formatted to 0 decimal places
                         "Loan Amount $": round(loan_amt),  # Loan Amount formatted to 0 decimal places
                         "Down Payment $": round(down_payment),  # Down Payment formatted to 0 decimal places
                         "PMI $": round(pmi, 2),  # PMI formatted to 2 decimal places
+                        "Year": year_data["Year"],
                         "Total Principal Paid $": year_data["Total Principal Paid $"],
                         "Total Interest Paid $": year_data["Total Interest Paid $"],
                         "Remaining Balance $": year_data["Remaining Balance $"]
