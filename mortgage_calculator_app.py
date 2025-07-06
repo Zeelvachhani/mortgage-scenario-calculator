@@ -18,23 +18,25 @@ def float_input(label, key, placeholder="", required=False):
     except:
         return None
 
-# Required inputs with *
+# --- Required Inputs (with stars) ---
 home_price = float_input("Home Price $", "home_price", "e.g. 300000", required=True)
-hoa = float_input("HOA $", "hoa", "e.g. 250", required=True)
-property_tax_rate = float_input("Property Tax %", "tax", "e.g. 1.2", required=True)
-insurance_rate = float_input("Insurance %", "insurance", "e.g. 0.5", required=True)
-pmi_rate = float_input("PMI %", "pmi", "e.g. 0.5", required=True)
-
-cash_available = float_input("Cash Available $", "cash", "e.g. 80000", required=True)
 interest_rate_base = float_input("Interest Rate %", "rate", "e.g. 5", required=True)
-monthly_liability = float_input("Monthly Liability $", "liability", "e.g. 500", required=True)
-annual_income = float_input("Annual Income $", "income", "e.g. 85000", required=True)
-max_dti = float_input("Max DTI %", "dti", "e.g. 36", required=True)
 loan_term = st.sidebar.number_input("Loan Term (Years) *", min_value=1, max_value=40, value=30)
 
-# Optional inputs (no *)
+# --- Optional Inputs (without stars) ---
+cash_available = float_input("Cash Available $", "cash", "e.g. 80000", required=True)
+annual_income = float_input("Annual Income $", "income", "e.g. 85000", required=True)
+max_dti = float_input("Max DTI %", "dti", "e.g. 36", required=True)
+
+hoa = float_input("HOA $", "hoa", "e.g. 250")
+property_tax_rate = float_input("Property Tax %", "tax", "e.g. 1.2")
+insurance_rate = float_input("Insurance %", "insurance", "e.g. 0.5")
+pmi_rate = float_input("PMI %", "pmi", "e.g. 0.5")
+
+# Optional fields (no stars)
 min_down_pct = float_input("Min Down Payment %", "min_dp", "e.g. 5")
 max_down_pct = float_input("Max Down Payment %", "max_dp", "e.g. 20")
+monthly_liability = float_input("Monthly Liability $", "liability", "e.g. 500")
 max_monthly_expense = float_input("Max Monthly Expense $", "max_exp", "e.g. 2200")
 
 calculate = st.sidebar.button("🔄 Calculate Scenarios")
@@ -81,6 +83,33 @@ def loan_details_table(df):
         records.append(row)
 
     return pd.DataFrame(records)
+
+# --- Amortization Schedule Function ---
+def amortization_schedule(loan_amount, interest_rate, loan_term):
+    """Generate amortization schedule for a given loan."""
+    monthly_payment = calculate_monthly_payment(loan_amount, interest_rate, loan_term)
+    balance = loan_amount
+    r = interest_rate / 12
+    amortization_data = []
+
+    for year in range(1, loan_term + 1):
+        total_principal_paid = 0
+        total_interest_paid = 0
+        for month in range(12):
+            interest_payment = balance * r
+            principal_payment = monthly_payment - interest_payment
+            balance -= principal_payment
+            total_interest_paid += interest_payment
+            total_principal_paid += principal_payment
+        
+        amortization_data.append({
+            "Year": year,
+            "Total Principal Paid $": total_principal_paid,
+            "Total Interest Paid $": total_interest_paid,
+            "Remaining Balance $": balance
+        })
+
+    return amortization_data
 
 # --- Main App Tabs ---
 st.title("🏡 Mortgage Scenario Dashboard")
