@@ -82,7 +82,7 @@ def loan_details_table(df):
 
 # --- Main App Tabs ---
 st.title("🏡 Mortgage Scenario Dashboard")
-tab1, tab2 = st.tabs(["📊 Scenario Analysis", "📈 Loan Analysis"])
+tab1, tab2, tab3 = st.tabs(["📊 Scenario Analysis", "📈 Loan Analysis", "📉 Amortization Analysis"])
 
 required_fields = [home_price, interest_rate_base, max_dti, annual_income, cash_available]
 
@@ -214,6 +214,47 @@ if calculate and all(field is not None and field > 0 for field in required_field
 
     else:
         st.warning("No valid scenarios found based on your input.")
+
+elif calculate:
+    st.error("Please fill in all required fields: Home Price, Interest Rate, Annual Income, Max DTI, Cash Available.")
+
+        with tab3:
+            st.subheader("📉 Amortization Schedule by Year")
+
+
+            # Generate amortization schedule for each loan scenario
+            amortization_data = []
+            for i, row in df.iterrows():
+                loan_amt = row["Loan Amount $"]
+                rate = row["Interest Rate %"] / 100
+                yearly_schedule = amortization_schedule(loan_amt, rate, loan_term)
+                for year_data in yearly_schedule:
+                    amortization_data.append({
+                        "Loan ID": f"Loan {i+1}",
+                        "Year": year_data["Year"],
+                        "Total Principal Paid $": year_data["Total Principal Paid $"],
+                        "Total Interest Paid $": year_data["Total Interest Paid $"],
+                        "Remaining Balance $": year_data["Remaining Balance $"]
+                    })
+
+
+            # Create a DataFrame for amortization schedule
+            df_amortization = pd.DataFrame(amortization_data)
+            st.dataframe(df_amortization.style.format({
+                "Total Principal Paid $": "${:,.0f}",
+                "Total Interest Paid $": "${:,.0f}",
+                "Remaining Balance $": "${:,.0f}"
+            }).set_properties(**{'text-align': 'center'}), height=500 if len(df_amortization) > 12 else None)
+
+
+            # Add option to download the amortization schedule
+            csv_amortization = df_amortization.to_csv(index=False).encode('utf-8')
+            st.download_button("⬇️ Download Amortization Schedule CSV", data=csv_amortization, file_name="amortization_schedule.csv", mime="text/csv")
+
+
+    else:
+        st.warning("No valid scenarios found based on your input.")
+
 
 elif calculate:
     st.error("Please fill in all required fields: Home Price, Interest Rate, Annual Income, Max DTI, Cash Available.")
