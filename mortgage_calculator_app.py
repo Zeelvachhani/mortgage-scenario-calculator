@@ -111,7 +111,14 @@ def loan_details_table(df):
 
         row["Total Payment (includes PMI if applicable) $"] = round(total_payment)
         row["Total Interest $"] = round(total_int)
+        
+        # Add PMI details
+        row["PMI Months"] = pmi_months
+        row["Total PMI Paid $"] = round(actual_pmi_total)
+        
+        # Add loan ID for tracking
         row["Loan ID"] = f"Loan {i+1}"
+
         records.append(row)
 
     return pd.DataFrame(records)
@@ -347,9 +354,22 @@ if calculate and all(field is not None and field > 0 for field in required_field
                         """, unsafe_allow_html=True)
 
             df_loan = loan_details_table(df.copy())
+            # Move PMI-related columns just before the 5-year total payment column
+            cols = df_loan.columns.tolist()
+            insert_at = cols.index("Total Payment in 5 Years (includes PMI if applicable) $")
+            pmi_cols = ["PMI Months", "Total PMI Paid $"]
+            # Remove if they already exist elsewhere to avoid duplicates
+            for col in pmi_cols:
+                if col in cols:
+                    cols.remove(col)
+            for i, col in enumerate(pmi_cols):
+                cols.insert(insert_at + i, col)
+            
+            df_loan = df_loan[cols]
+
             df_loan.index = range(1, len(df_loan) + 1)  # Set index starting from 1
             numeric_cols = df_loan.select_dtypes(include='number').columns
-            int_cols = [col for col in numeric_cols if 'Interest' in col or 'Payment' in col or 'Balance' in col or col in ["Home Price $", "Down $", "Loan Amount $", "Discount Points", "Closing Cost $", "Total Cash Used $"]]
+            int_cols = [col for col in numeric_cols if 'Interest' in col or 'Payment' in col or 'Balance' in col or col in ["Home Price $", "Down $", "Loan Amount $", "Discount Points", "Closing Cost $", "Total Cash Used $", "Total PMI Paid $"]]
             fmt = {}
             for col in df_loan.columns:
                 if col in ["PMI $", "Monthly P&I $", "Total Monthly $"]:
@@ -360,7 +380,7 @@ if calculate and all(field is not None and field > 0 for field in required_field
                              "Total Payment (includes PMI if applicable) $", "Total Interest $"] or \
                              "Payment" in col or "Interest" in col or "Balance" in col:
                     fmt[col] = "${:,.0f}"
-                elif col in ["Discount Points"]:
+                elif col in ["Discount Points", "PMI Months"]:
                     fmt[col] = "{:,.0f}"
 
             # Compute dynamic height
