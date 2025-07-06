@@ -46,6 +46,7 @@ def calculate_monthly_payment(loan_amount, interest_rate, years):
         return loan_amount / n
     return loan_amount * r * (1 + r) ** n / ((1 + r) ** n - 1)
 
+# Amortization Schedule Calculation
 def amortization_schedule(loan_amt, rate, term_years):
     r = rate / 12
     n = term_years * 12
@@ -64,6 +65,26 @@ def amortization_schedule(loan_amt, rate, term_years):
         })
 
     return pd.DataFrame(schedule)
+
+def loan_details_table(df):
+    """Generate the loan details table with amortization info for each loan scenario."""
+    records = []
+    for _, row in df.iterrows():
+        loan_amt = row["Loan Amount $"]
+        rate = row["Interest Rate %"] / 100
+        # Use amortization schedule
+        schedule = amortization_schedule(loan_amt, rate, loan_term)
+        
+        # Store amortization data into the loan details table
+        for year in [5, 10, 15, 20, 25, 30]:
+            remaining_balance = schedule[schedule['Month'] == year * 12]['Remaining Balance $'].values[0]
+            total_interest_paid = schedule[schedule['Month'] == year * 12]['Interest Payment $'].sum()
+            row[f"Remaining Balance end of Year {year} $"] = remaining_balance
+            row[f"Total Interest in Year {year} $"] = total_interest_paid
+
+        records.append(row)
+
+    return pd.DataFrame(records)
 
 # --- Main App Tabs ---
 st.title("🏡 Mortgage Scenario Dashboard")
@@ -182,7 +203,7 @@ if calculate and all(field is not None and field > 0 for field in required_field
             time_years = [5, 10, 15, 20, 25, 30]
             for i, row in df_loan.iterrows():
                 balance_data = [row[f"Remaining Balance end of Year {year} $"] for year in time_years]
-                interest_data = [row[f"Total Interest in {year} Years $"] for year in time_years]
+                interest_data = [row[f"Total Interest in Year {year} $"] for year in time_years]
 
                 fig, ax1 = plt.subplots(figsize=(10, 5))
 
