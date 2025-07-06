@@ -214,12 +214,6 @@ if calculate and all(field is not None and field > 0 for field in required_field
             csv_loan = df_loan.to_csv(index=False).encode('utf-8')
             st.download_button("⬇️ Download Loan Analysis CSV", data=csv_loan, file_name="loan_analysis.csv", mime="text/csv")
 
-    else:
-        st.warning("No valid scenarios found based on your input.")
-
-elif calculate:
-    st.error("Please fill in all required fields: Home Price, Interest Rate, Annual Income, Max DTI, Cash Available.")
-
         with tab3:
             st.subheader("📉 Amortization Schedule by Year")
 
