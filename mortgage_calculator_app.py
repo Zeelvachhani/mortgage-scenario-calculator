@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from st_aggrid import AgGrid, GridOptionsBuilder
 
 st.set_page_config(page_title="Mortgage Scenario Dashboard", layout="wide")
 
@@ -271,12 +272,41 @@ if calculate and all(field is not None and field > 0 for field in required_field
             max_height = "600px" if len(df_loan) > 15 else "auto"
 
 
-            st.dataframe(
-                df_loan.drop(columns=["Loan ID"]).style
-                .format(fmt)
-                .set_properties(**{'text-align': 'center'}),
-                height=500 if len(df_loan) > 12 else None
-             )
+
+            df_loan = loan_details_table(df.copy())
+            df_loan.index = range(1, len(df_loan) + 1)  # Set index starting from 1
+            
+            # Build grid options with sorting, filtering, resizing enabled
+            gb = GridOptionsBuilder.from_dataframe(df_loan.drop(columns=["Loan ID"]))
+            gb.configure_default_column(sortable=True, filter=True, resizable=True)
+            
+            # Increase header height (set to 60 pixels)
+            gb.configure_grid_options(headerHeight=60)
+            
+            gridOptions = gb.build()
+            
+            AgGrid(
+                df_loan.drop(columns=["Loan ID"]),
+                gridOptions=gridOptions,
+                enable_enterprise_modules=False,
+                height=500 if len(df_loan) > 12 else None,
+                fit_columns_on_grid_load=True,
+            )
+            
+            # Download button remains unchanged
+            csv_loan = df_loan.to_csv(index=False).encode('utf-8')
+            st.download_button("⬇️ Download Loan Analysis CSV", data=csv_loan, file_name="loan_analysis.csv", mime="text/csv")
+            
+
+
+            
+
+            # st.dataframe(
+            #     df_loan.drop(columns=["Loan ID"]).style
+            #     .format(fmt)
+            #     .set_properties(**{'text-align': 'center'}),
+            #     height=500 if len(df_loan) > 12 else None
+            #  )
            
             
             # Inject scrollable container and wrapped headers
