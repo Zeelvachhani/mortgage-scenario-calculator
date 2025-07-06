@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+from datetime import datetime
 
 st.set_page_config(page_title="Mortgage Scenario Dashboard", layout="wide")
 
@@ -44,64 +46,49 @@ def calculate_monthly_payment(loan_amount, interest_rate, years):
         return loan_amount / n
     return loan_amount * r * (1 + r) ** n / ((1 + r) ** n - 1)
 
-def amortization_schedule(loan_amt, interest_rate, loan_term):
-    r = interest_rate / 12  # Monthly interest rate
-    n = loan_term * 12      # Total number of months
+# Amortization Schedule Calculation
+def amortization_schedule(loan_amt, rate, term_years):
+    r = rate / 12
+    n = term_years * 12
+    balance = loan_amt
     schedule = []
 
-    balance = loan_amt
     for month in range(1, n + 1):
-        interest_paid = balance * r
-        principal_paid = calculate_monthly_payment(loan_amt, interest_rate, loan_term) - interest_paid
-        balance -= principal_paid
+        interest_payment = balance * r
+        principal_payment = calculate_monthly_payment(loan_amt, rate, term_years) - interest_payment
+        balance -= principal_payment
         schedule.append({
-            "Month": month,
-            "Principal Paid $": round(principal_paid, 2),
-            "Interest Paid $": round(interest_paid, 2),
-            "Remaining Balance $": round(balance, 2)
+            'Month': month,
+            'Principal Payment $': round(principal_payment, 2),
+            'Interest Payment $': round(interest_payment, 2),
+            'Remaining Balance $': round(balance, 2)
         })
 
-    # Create a summary by year (each 12 months)
-    yearly_schedule = []
-    for year in range(1, loan_term + 1):
-        year_months = year * 12
-        year_schedule = [entry for entry in schedule if entry["Month"] <= year_months]
-        total_principal_paid = sum(entry["Principal Paid $"] for entry in year_schedule)
-        total_interest_paid = sum(entry["Interest Paid $"] for entry in year_schedule)
-        remaining_balance = year_schedule[-1]["Remaining Balance $"] if year_schedule else loan_amt
-        yearly_schedule.append({
-            "Year": year,
-            "Total Principal Paid $": round(total_principal_paid, 2),
-            "Total Interest Paid $": round(total_interest_paid, 2),
-            "Remaining Balance $": round(remaining_balance, 2)
-        })
-
-    return yearly_schedule
+    return pd.DataFrame(schedule)
 
 def loan_details_table(df):
+    """Generate the loan details table with amortization info for each loan scenario."""
     records = []
-    for i, row in df.iterrows():
+    for _, row in df.iterrows():
         loan_amt = row["Loan Amount $"]
         rate = row["Interest Rate %"] / 100
-        pmt = calculate_monthly_payment(loan_amt, rate, loan_term)
-        pmi = row["PMI $"]
-        total_pmt = pmt + pmi
+        # Use amortization schedule
+        schedule = amortization_schedule(loan_amt, rate, loan_term)
+        
+        # Store amortization data into the loan details table
+        for year in [5, 10, 15, 20, 25, 30]:
+            remaining_balance = schedule[schedule['Month'] == year * 12]['Remaining Balance $'].values[0]
+            total_interest_paid = schedule[schedule['Month'] == year * 12]['Interest Payment $'].sum()
+            row[f"Remaining Balance end of Year {year} $"] = remaining_balance
+            row[f"Total Interest in Year {year} $"] = total_interest_paid
 
-        yearly_schedule = amortization_schedule(loan_amt, rate, loan_term)
-
-        for year_data in yearly_schedule:
-            record = row.copy()
-            record["Year"] = year_data["Year"]
-            record["Total Principal Paid $"] = year_data["Total Principal Paid $"]
-            record["Total Interest Paid $"] = year_data["Total Interest Paid $"]
-            record["Remaining Balance $"] = year_data["Remaining Balance $"]
-            records.append(record)
+        records.append(row)
 
     return pd.DataFrame(records)
 
 # --- Main App Tabs ---
 st.title("🏡 Mortgage Scenario Dashboard")
-tab1, tab2, tab3 = st.tabs(["📊 Scenario Analysis", "📈 Loan Analysis", "📊 Amortization Analysis"])
+tab1, tab2 = st.tabs(["📊 Scenario Analysis", "📈 Loan Analysis"])
 
 required_fields = [home_price, interest_rate_base, max_dti, annual_income, cash_available]
 
@@ -172,9 +159,24 @@ if calculate and all(field is not None and field > 0 for field in required_field
                     "Monthly P&I $": "${:.2f}",
                     "Total Monthly $": "${:.2f}",
                     "DTI %": "{:.2f}%"
-                }).set_properties(**{'text-align': 'center'}), 
+                }).set_properties(**{'text-align': 'center'}),
                 height=500 if len(df) > 12 else None
             )
+
+            st.subheader("📈 Monthly Payment vs Down Payment % by Discount Points")
+            fig, ax = plt.subplots(figsize=(10, 5))
+            for points in df["Discount Points"].unique():
+                subset = df[df["Discount Points"] == points]
+                ax.plot(subset["Down %"], subset["Total Monthly $"], marker='o', label=f"{points} points")
+            ax.set_xlabel("Down Payment %")
+            ax.set_ylabel("Total Monthly Payment $")
+            ax.set_title("Monthly Payment vs Down Payment %")
+            ax.legend(title="Discount Points")
+            ax.grid(True)
+            st.pyplot(fig)
+
+            csv = df.to_csv(index=False).encode('utf-8')
+            st.download_button("⬇️ Download Scenarios as CSV", data=csv, file_name="mortgage_scenarios.csv", mime="text/csv")
 
         with tab2:
             st.subheader("📈 Loan Analysis (30-Year Term)")
@@ -182,37 +184,44 @@ if calculate and all(field is not None and field > 0 for field in required_field
             numeric_cols = df_loan.select_dtypes(include='number').columns
             int_cols = [col for col in numeric_cols if 'Interest' in col or 'Payment' in col or 'Balance' in col or col in ["Home Price $", "Down $", "Loan Amount $", "Discount Points", "Closing Cost $", "Total Cash Used $"]]
             fmt = {col: "${:,.0f}" for col in int_cols}
-            st.dataframe(df_loan.style.format(fmt).set_properties(**{'text-align': 'center'}), height=500 if len(df_loan) > 12 else None)
 
-        with tab3:
-            st.subheader("📊 Amortization Schedule by Year")
-
-            # Generate amortization schedule for each loan scenario
+            # Generate amortization table for hidden use
             amortization_data = []
-            for i, row in df.iterrows():
+            for _, row in df_loan.iterrows():
                 loan_amt = row["Loan Amount $"]
                 rate = row["Interest Rate %"] / 100
-                yearly_schedule = amortization_schedule(loan_amt, rate, loan_term)
-                for year_data in yearly_schedule:
-                    amortization_data.append({
-                        "Loan ID": f"Loan {i+1}",
-                        "Year": year_data["Year"],
-                        "Total Principal Paid $": year_data["Total Principal Paid $"],
-                        "Total Interest Paid $": year_data["Total Interest Paid $"],
-                        "Remaining Balance $": year_data["Remaining Balance $"]
-                    })
+                schedule = amortization_schedule(loan_amt, rate, loan_term)
 
-            # Create a DataFrame for amortization schedule
-            df_amortization = pd.DataFrame(amortization_data)
-            st.dataframe(df_amortization.style.format({
-                "Total Principal Paid $": "${:,.0f}",
-                "Total Interest Paid $": "${:,.0f}",
-                "Remaining Balance $": "${:,.0f}"
-            }).set_properties(**{'text-align': 'center'}), height=500 if len(df_amortization) > 12 else None)
+                # Store this hidden amortization data
+                amortization_data.append(schedule)
 
-            # Add option to download the amortization schedule
-            csv_amortization = df_amortization.to_csv(index=False).encode('utf-8')
-            st.download_button("⬇️ Download Amortization Schedule CSV", data=csv_amortization, file_name="amortization_schedule.csv", mime="text/csv")
+            # Hidden data, will not be displayed
+            st.empty()  # Hides the table for amortization
+
+            # --- Remaining Balance vs Interest Paid chart ---
+            st.subheader("📊 Remaining Balance & Interest Paid")
+            time_years = [5, 10, 15, 20, 25, 30]
+            for i, row in df_loan.iterrows():
+                balance_data = [row[f"Remaining Balance end of Year {year} $"] for year in time_years]
+                interest_data = [row[f"Total Interest in Year {year} $"] for year in time_years]
+
+                fig, ax1 = plt.subplots(figsize=(10, 5))
+
+                ax1.set_xlabel('Years')
+                ax1.set_ylabel('Remaining Balance $', color='tab:blue')
+                ax1.plot(time_years, balance_data, marker='o', color='tab:blue', label='Remaining Balance')
+                ax1.tick_params(axis='y', labelcolor='tab:blue')
+
+                ax2 = ax1.twinx()
+                ax2.set_ylabel('Interest Paid $', color='tab:red')
+                ax2.plot(time_years, interest_data, marker='s', color='tab:red', label='Interest Paid')
+                ax2.tick_params(axis='y', labelcolor='tab:red')
+
+                fig.tight_layout()
+                st.pyplot(fig)
+
+            csv_loan = df_loan.to_csv(index=False).encode('utf-8')
+            st.download_button("⬇️ Download Loan Analysis CSV", data=csv_loan, file_name="loan_analysis.csv", mime="text/csv")
 
     else:
         st.warning("No valid scenarios found based on your input.")
