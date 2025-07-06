@@ -290,7 +290,10 @@ if calculate and all(field is not None and field > 0 for field in required_field
             # Add option to download the amortization schedule
             csv_amortization = df_amortization.to_csv(index=False).encode('utf-8')
             st.download_button("⬇️ Download Amortization Schedule CSV", data=csv_amortization, file_name="amortization_schedule.csv", mime="text/csv")
-
+    
+            # Reset the DataFrame index so that it starts from 1
+            df_amortization.index = range(1, len(df_amortization) + 1)  # Fix: Starts from 1
+        
     else:
         st.warning("No valid scenarios found based on your input.")
 
