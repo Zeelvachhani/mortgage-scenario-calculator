@@ -293,13 +293,7 @@ if calculate and all(field is not None and field > 0 for field in required_field
                 fit_columns_on_grid_load=True,
             )
             
-            # Download button remains unchanged
-            csv_loan = df_loan.to_csv(index=False).encode('utf-8')
-            st.download_button("⬇️ Download Loan Analysis CSV", data=csv_loan, file_name="loan_analysis.csv", mime="text/csv")
-            
-
-
-            
+           
 
             # st.dataframe(
             #     df_loan.drop(columns=["Loan ID"]).style
