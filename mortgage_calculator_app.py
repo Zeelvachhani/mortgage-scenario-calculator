@@ -315,13 +315,13 @@ if calculate and all(field is not None and field > 0 for field in required_field
             # """, unsafe_allow_html=True)
             
             # Format your DataFrame
-            styled_df = df_loan.drop(columns=["Loan ID"]).copy()
-            for col, f in fmt.items():
-                if col in styled_df.columns:
-                    styled_df[col] = styled_df[col].map(lambda x: f.format(x) if pd.notnull(x) else "")
+            # styled_df = df_loan.drop(columns=["Loan ID"]).copy()
+            # for col, f in fmt.items():
+            #     if col in styled_df.columns:
+            #         styled_df[col] = styled_df[col].map(lambda x: f.format(x) if pd.notnull(x) else "")
             
-            # Show the table in a scrollable container
-            st.markdown(f'<div class="scroll-table-container">{styled_df.to_html(index=True, escape=False)}</div>', unsafe_allow_html=True)
+            # # Show the table in a scrollable container
+            # st.markdown(f'<div class="scroll-table-container">{styled_df.to_html(index=True, escape=False)}</div>', unsafe_allow_html=True)
 
            
             csv_loan = df_loan.to_csv(index=False).encode('utf-8')
