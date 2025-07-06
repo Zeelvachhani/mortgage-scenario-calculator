@@ -277,30 +277,30 @@ if calculate and all(field is not None and field > 0 for field in required_field
             df_loan.index = range(1, len(df_loan) + 1)  # Set index starting from 1
             
             # Build grid options with sorting, filtering, resizing enabled
-            gb = GridOptionsBuilder.from_dataframe(df_loan.drop(columns=["Loan ID"]))
-            gb.configure_default_column(sortable=True, filter=True, resizable=True, min_width=2500, header_class="header-wrap-center")
+            # gb = GridOptionsBuilder.from_dataframe(df_loan.drop(columns=["Loan ID"]))
+            # gb.configure_default_column(sortable=True, filter=True, resizable=True, min_width=250, header_class="header-wrap-center")
             
-            # Increase header height (set to 60 pixels)
-            gb.configure_grid_options(headerHeight=60)
+            # # Increase header height (set to 60 pixels)
+            # gb.configure_grid_options(headerHeight=60)
             
-            gridOptions = gb.build()
+            # gridOptions = gb.build()
             
-            AgGrid(
-                df_loan.drop(columns=["Loan ID"]),
-                gridOptions=gridOptions,
-                enable_enterprise_modules=False,
-                height=500 if len(df_loan) > 12 else None,
-                fit_columns_on_grid_load=True,
-            )
+            # AgGrid(
+            #     df_loan.drop(columns=["Loan ID"]),
+            #     gridOptions=gridOptions,
+            #     enable_enterprise_modules=False,
+            #     height=500 if len(df_loan) > 12 else None,
+            #     fit_columns_on_grid_load=True,
+            # )
             
            
 
-            # st.dataframe(
-            #     df_loan.drop(columns=["Loan ID"]).style
-            #     .format(fmt)
-            #     .set_properties(**{'text-align': 'center'}),
-            #     height=500 if len(df_loan) > 12 else None
-            #  )
+            st.dataframe(
+                df_loan.drop(columns=["Loan ID"]).style
+                .format(fmt)
+                .set_properties(**{'text-align': 'center'}),
+                height=500 if len(df_loan) > 12 else None
+             )
            
             
             # Inject scrollable container and wrapped headers
