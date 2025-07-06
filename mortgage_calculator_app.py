@@ -8,7 +8,7 @@ st.set_page_config(page_title="Mortgage Scenario Dashboard", layout="wide")
 # --- Sidebar inputs ---
 st.sidebar.title("🏠 Mortgage Parameters")
 
-st.sidebar.markdown("**Note:** Leave fields blank if unsure.")
+st.sidebar.markdown("Fields marked with * are required.")
 
 def float_input(label, key, placeholder=""):
     val = st.sidebar.text_input(label, key=key, placeholder=placeholder)
@@ -17,23 +17,23 @@ def float_input(label, key, placeholder=""):
     except:
         return None
 
-home_price = float_input("Home Price $:", "home_price", "e.g. 300000")
-hoa = float_input("HOA $:", "hoa", "e.g. 250")
-property_tax_rate = float_input("Property Tax %:", "tax", "e.g. 1.2")
-insurance_rate = float_input("Insurance %:", "insurance", "e.g. 0.5")
-pmi_rate = float_input("PMI %:", "pmi", "e.g. 0.5")
+home_price = float_input("Home Price $ *", "home_price", "e.g. 300000")
+hoa = float_input("HOA $", "hoa", "e.g. 250")
+property_tax_rate = float_input("Property Tax %", "tax", "e.g. 1.2")
+insurance_rate = float_input("Insurance %", "insurance", "e.g. 0.5")
+pmi_rate = float_input("PMI %", "pmi", "e.g. 0.5")
 
-cash_available = float_input("Cash Available $:", "cash", "e.g. 80000")
-min_down_pct = float_input("Min Down Payment %:", "min_dp", "e.g. 5")
-max_down_pct = float_input("Max Down Payment %:", "max_dp", "e.g. 20")
+cash_available = float_input("Cash Available $ *", "cash", "e.g. 80000")
+min_down_pct = float_input("Min Down Payment %", "min_dp", "e.g. 5")
+max_down_pct = float_input("Max Down Payment %", "max_dp", "e.g. 20")
 
-interest_rate_base = float_input("Interest Rate %:", "rate", "e.g. 5")
-loan_term = st.sidebar.number_input("Loan Term (Years):", min_value=1, max_value=40, value=30)
+interest_rate_base = float_input("Interest Rate % *", "rate", "e.g. 5")
+loan_term = st.sidebar.number_input("Loan Term (Years) *", min_value=1, max_value=40, value=30)
 
-monthly_liability = float_input("Monthly Liability $:", "liability", "e.g. 500")
-annual_income = float_input("Annual Income $:", "income", "e.g. 85000")
-max_dti = float_input("Max DTI %:", "dti", "e.g. 36")
-max_monthly_expense = float_input("Max Monthly Expense $ (Optional):", "max_exp", "e.g. 2200")
+monthly_liability = float_input("Monthly Liability $", "liability", "e.g. 500")
+annual_income = float_input("Annual Income $ *", "income", "e.g. 85000")
+max_dti = float_input("Max DTI % *", "dti", "e.g. 36")
+max_monthly_expense = float_input("Max Monthly Expense $", "max_exp", "e.g. 2200")
 
 calculate = st.sidebar.button("🔄 Calculate Scenarios")
 
@@ -86,7 +86,7 @@ def loan_details_table(df):
 st.title("🏡 Mortgage Scenario Dashboard")
 tab1, tab2 = st.tabs(["📊 Scenario Analysis", "📈 Loan Calculator"])
 
-required_fields = [home_price, interest_rate_base, max_dti, annual_income]
+required_fields = [home_price, interest_rate_base, max_dti, annual_income, cash_available]
 
 if calculate and all(field is not None and field > 0 for field in required_fields):
     property_tax_rate = (property_tax_rate or 0) / 100
@@ -210,7 +210,7 @@ if calculate and all(field is not None and field > 0 for field in required_field
         st.warning("No valid scenarios found based on your input.")
 
 elif calculate:
-    st.error("Please fill in all required fields: Home Price, Interest Rate, Annual Income, Max DTI.")
+    st.error("Please fill in all required fields: Home Price, Interest Rate, Annual Income, Max DTI, Cash Available.")
 
 # --- Footer ---
 st.markdown("---")
