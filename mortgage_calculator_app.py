@@ -14,26 +14,25 @@ def float_input(label, key, placeholder="", step=1.0, required=False):
         label += " *"
     return st.sidebar.number_input(label, key=key, step=step, format="%.4f")
 
-        
 # Required inputs with *
-home_price = float_input("Home Price $", "home_price", "e.g. 300000", steep=10000, required=True)
-hoa = float_input("HOA $", "hoa", "e.g. 250", steep=10, required=True)
-property_tax_rate = float_input("Property Tax %", "tax", "e.g. 1.2", steep=0.1, required=True)
-insurance_rate = float_input("Insurance %", "insurance", "e.g. 0.5", steep=0.1, required=True)
-pmi_rate = float_input("PMI %", "pmi", "e.g. 0.5", steep=0.1, required=True)
-interest_rate_base = float_input("Interest Rate %", "rate", "e.g. 5", steep=0.1, required=True)
+home_price = float_input("Home Price $", "home_price", "e.g. 300000", step=10000, required=True)
+hoa = float_input("HOA $", "hoa", "e.g. 250", step=10, required=True)
+property_tax_rate = float_input("Property Tax %", "tax", "e.g. 1.2", step=0.1, required=True)
+insurance_rate = float_input("Insurance %", "insurance", "e.g. 0.5", step=0.1, required=True)
+pmi_rate = float_input("PMI %", "pmi", "e.g. 0.5", step=0.1, required=True)
+interest_rate_base = float_input("Interest Rate %", "rate", "e.g. 5", step=0.1, required=True)
 loan_term = st.sidebar.number_input("Loan Term (Years) *", min_value=1, max_value=40, value=30)
 
-cash_available = float_input("Cash Available $", "cash", "e.g. 80000", steep=10000, required=True)
-monthly_liability = float_input("Monthly Liability $", "liability", "e.g. 500", steep=10, required=True)
-annual_income = float_input("Annual Income $", "income", "e.g. 85000", steep=10000, required=True)
-max_dti = float_input("Max DTI %", "dti", "e.g. 36", steep=1, required=True)
+cash_available = float_input("Cash Available $", "cash", "e.g. 80000", step=10000, required=True)
+monthly_liability = float_input("Monthly Liability $", "liability", "e.g. 500", step=10, required=True)
+annual_income = float_input("Annual Income $", "income", "e.g. 85000", step=10000, required=True)
+max_dti = float_input("Max DTI %", "dti", "e.g. 36", step=1, required=True)
 
 
 # Optional inputs (no *)
-min_down_pct = float_input("Min Down Payment %", "min_dp", "e.g. 5", steep=1)
-max_down_pct = float_input("Max Down Payment %", "max_dp", "e.g. 20", steep=1)
-max_monthly_expense = float_input("Max Monthly Expense $", "max_exp", "e.g. 2200", steep=100)
+min_down_pct = float_input("Min Down Payment %", "min_dp", "e.g. 5", step=1)
+max_down_pct = float_input("Max Down Payment %", "max_dp", "e.g. 20", step=1)
+max_monthly_expense = float_input("Max Monthly Expense $", "max_exp", "e.g. 2200", step=100)
 
 calculate = st.sidebar.button("🔄 Calculate Scenarios")
 
