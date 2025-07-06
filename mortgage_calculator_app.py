@@ -50,6 +50,23 @@ def calculate_monthly_payment(loan_amount, interest_rate, years):
         return loan_amount / n
     return loan_amount * r * (1 + r) ** n / ((1 + r) ** n - 1)
 
+def months_until_ltv_80(home_price, loan_amount, interest_rate, loan_term):
+    """Return number of months PMI is paid until LTV reaches 80%."""
+    monthly_payment = calculate_monthly_payment(loan_amount, interest_rate, loan_term)
+    balance = loan_amount
+    r = interest_rate / 12
+    target_balance = home_price * 0.80
+    months = 0
+    
+    while balance > target_balance and months < loan_term * 12:
+        interest = balance * r
+        principal = monthly_payment - interest
+        balance -= principal
+        months += 1
+        
+    return months
+
+
 def loan_details_table(df):
     def interest_paid(loan, r, pmt, months):
         balance = loan
@@ -64,26 +81,77 @@ def loan_details_table(df):
     records = []
     for i, row in df.iterrows():
         loan_amt = row["Loan Amount $"]
+        home_price = row["Home Price $"]
         rate = row["Interest Rate %"] / 100
         pmt = calculate_monthly_payment(loan_amt, rate, 30)
-        pmi = row["PMI $"]
-        total_pmt = pmt + pmi
-
         r = rate / 12
 
+        # Calculate how many months PMI is paid
+        pmi_months = months_until_ltv_80(home_price, loan_amt, rate, 30)
+        pmi_per_month = row["PMI $"]
+        actual_pmi_total = pmi_per_month * pmi_months
+
+        # Total payments until year 5, 10, 15
         for year in [5, 10, 15]:
-            int_paid, rem_bal = interest_paid(loan_amt, r, pmt, year * 12)
-            row[f"Total Payment in {year} Years (includes PMI if applicable) $"] = round(total_pmt * 12 * year)
+            months = year * 12
+            int_paid, rem_bal = interest_paid(loan_amt, r, pmt, months)
+
+            if pmi_months >= months:
+                total_pmt = (pmt + pmi_per_month) * months
+            else:
+                total_pmt = (pmt + pmi_per_month) * pmi_months + pmt * (months - pmi_months)
+
+            row[f"Total Payment in {year} Years (includes PMI if applicable) $"] = round(total_pmt)
             row[f"Total Interest in {year} Years $"] = round(int_paid)
             row[f"Remaining Balance end of Year {year} $"] = round(rem_bal)
 
-        total_int, _ = interest_paid(loan_amt, r, pmt, 30 * 12)
-        row["Total Payment (includes PMI if applicable) $"] = round(total_pmt * 360)
+        # Total payment and interest for full loan term (30 years)
+        total_int, _ = interest_paid(loan_amt, r, pmt, 360)
+        total_payment = pmt * 360 + actual_pmi_total
+
+        row["Total Payment (includes PMI if applicable) $"] = round(total_payment)
         row["Total Interest $"] = round(total_int)
         row["Loan ID"] = f"Loan {i+1}"
         records.append(row)
 
     return pd.DataFrame(records)
+
+
+
+# def loan_details_table(df):
+#     def interest_paid(loan, r, pmt, months):
+#         balance = loan
+#         interest = 0
+#         for _ in range(months):
+#             int_paid = balance * r
+#             principal = pmt - int_paid
+#             balance -= principal
+#             interest += int_paid
+#         return interest, balance
+
+#     records = []
+#     for i, row in df.iterrows():
+#         loan_amt = row["Loan Amount $"]
+#         rate = row["Interest Rate %"] / 100
+#         pmt = calculate_monthly_payment(loan_amt, rate, 30)
+#         pmi = row["PMI $"]
+#         total_pmt = pmt + pmi
+
+#         r = rate / 12
+
+#         for year in [5, 10, 15]:
+#             int_paid, rem_bal = interest_paid(loan_amt, r, pmt, year * 12)
+#             row[f"Total Payment in {year} Years (includes PMI if applicable) $"] = round(total_pmt * 12 * year)
+#             row[f"Total Interest in {year} Years $"] = round(int_paid)
+#             row[f"Remaining Balance end of Year {year} $"] = round(rem_bal)
+
+#         total_int, _ = interest_paid(loan_amt, r, pmt, 30 * 12)
+#         row["Total Payment (includes PMI if applicable) $"] = round(total_pmt * 360)
+#         row["Total Interest $"] = round(total_int)
+#         row["Loan ID"] = f"Loan {i+1}"
+#         records.append(row)
+
+#     return pd.DataFrame(records)
 
 # --- Amortization Schedule Function ---
 def amortization_schedule(loan_amount, interest_rate, loan_term):
