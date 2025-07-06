@@ -268,7 +268,7 @@ if calculate and all(field is not None and field > 0 for field in required_field
                     fmt[col] = "{:,.0f}"
 
             # Compute dynamic height
-            max_height = "500px" if len(df_loan) > 12 else "auto"
+            max_height = "600px" if len(df_loan) > 15 else "auto"
             
             # Inject scrollable container and wrapped headers
             st.markdown(f"""
@@ -287,8 +287,8 @@ if calculate and all(field is not None and field > 0 for field in required_field
                 th {{
                     word-wrap: break-word;
                     white-space: normal;
-                    text-align: center;
-                    vertical-align: middle;
+                    text-align: center !important; 
+                    vertical-align: middle !important;
                     font-size: 13px;
                     padding: 6px;
                     background-color: #f0f0f0;
