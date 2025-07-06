@@ -10,7 +10,6 @@ st.sidebar.title("🏠 Mortgage Parameters")
 
 st.sidebar.markdown("**Note:** Leave fields blank if unsure.")
 
-# Using text_input to allow blank defaults, then converting later
 def float_input(label, key, placeholder=""):
     val = st.sidebar.text_input(label, key=key, placeholder=placeholder)
     try:
@@ -38,7 +37,7 @@ max_monthly_expense = float_input("Max Monthly Expense $ (Optional):", "max_exp"
 
 calculate = st.sidebar.button("🔄 Calculate Scenarios")
 
-# --- Helper function ---
+# --- Helper Functions ---
 def calculate_monthly_payment(loan_amount, interest_rate, years):
     r = interest_rate / 12
     n = years * 12
@@ -46,12 +45,50 @@ def calculate_monthly_payment(loan_amount, interest_rate, years):
         return loan_amount / n
     return loan_amount * r * (1 + r) ** n / ((1 + r) ** n - 1)
 
-# --- Main App ---
+def loan_details_table(df):
+    def cumulative_payment(r, n, pmt, years):
+        return pmt * min(n, years * 12)
+
+    def interest_paid(loan, r, pmt, months):
+        balance = loan
+        interest = 0
+        for _ in range(months):
+            int_paid = balance * r
+            principal = pmt - int_paid
+            balance -= principal
+            interest += int_paid
+        return interest, balance
+
+    records = []
+    for _, row in df.iterrows():
+        loan_amt = row["Loan Amount $"]
+        rate = row["Interest Rate %"] / 100
+        pmt = calculate_monthly_payment(loan_amt, rate, 30)
+        pmi = row["PMI $"]
+        total_pmt = pmt + pmi
+
+        r = rate / 12
+
+        for year in [5, 10, 15]:
+            int_paid, rem_bal = interest_paid(loan_amt, r, pmt, year * 12)
+            row[f"Total Payment in {year} Years (includes PMI if applicable) $"] = round(total_pmt * 12 * year, 2)
+            row[f"Total Interest in {year} Years $"] = round(int_paid, 2)
+            row[f"Remaining Balance end of Year {year} $"] = round(rem_bal, 2)
+
+        total_int, _ = interest_paid(loan_amt, r, pmt, 30 * 12)
+        row["Total Payment (includes PMI if applicable) $"] = round(total_pmt * 360, 2)
+        row["Total Interest $"] = round(total_int, 2)
+        records.append(row)
+
+    return pd.DataFrame(records)
+
+# --- Main App Tabs ---
 st.title("🏡 Mortgage Scenario Dashboard")
+tab1, tab2 = st.tabs(["📊 Scenario Analysis", "📈 Loan Calculator"])
 
 required_fields = [home_price, interest_rate_base, max_dti, annual_income]
+
 if calculate and all(field is not None and field > 0 for field in required_fields):
-    # Convert percentages
     property_tax_rate = (property_tax_rate or 0) / 100
     insurance_rate = (insurance_rate or 0) / 100
     pmi_rate = (pmi_rate or 0) / 100
@@ -62,7 +99,7 @@ if calculate and all(field is not None and field > 0 for field in required_field
 
     results = []
 
-    for points in range(0, 20):  # Discount points 0 to 10
+    for points in range(0, 20):
         discount = points * 0.0025
         adjusted_rate = interest_rate_base / 100 - discount
 
@@ -101,92 +138,76 @@ if calculate and all(field is not None and field > 0 for field in required_field
     if results:
         df = pd.DataFrame(results)
 
-        # --- Summary Cards ---
-        best_payment = df.loc[df["Total Monthly $"].idxmin()]
-        best_dti = df.loc[df["DTI %"].idxmin()]
-        best_cash = df.loc[df["Total Cash Used $"].idxmin()]
-        best_closing = df.loc[df["Closing Cost $"].idxmin()]
-        
-        col1, col2, col3, col4 = st.columns(4)
-        col1.metric("💰 Lowest Monthly Payment", f"${best_payment['Total Monthly $']:,.2f}")
-        col2.metric("📉 Best Debt-to-Income Ratio", f"{best_dti['DTI %']:.2f}%")
-        col3.metric("💵 Lowest Total Cash Used", f"${best_cash['Total Cash Used $']:,.2f}")
-        col4.metric("🏁 Lowest Closing Cost", f"${best_closing['Closing Cost $']:,.2f}")
+        with tab1:
+            st.subheader("📊 Scenario Results")
+            st.dataframe(df.style.format({
+                "Home Price $": "${:,.0f}",
+                "Down %": "{:.2f}%",
+                "Down $": "${:,.0f}",
+                "Loan Amount $": "${:,.0f}",
+                "Interest Rate %": "{:.2f}%",
+                "Closing Cost $": "${:.2f}",
+                "PMI $": "${:.2f}",
+                "Total Cash Used $": "${:.2f}",
+                "Monthly P&I $": "${:.2f}",
+                "Total Monthly $": "${:.2f}",
+                "DTI %": "{:.2f}%",
+            }), height=400)
 
+            st.subheader("📈 Monthly Payment vs Down Payment % by Discount Points")
+            fig, ax = plt.subplots(figsize=(10, 5))
+            for points in df["Discount Points"].unique():
+                subset = df[df["Discount Points"] == points]
+                ax.plot(subset["Down %"], subset["Total Monthly $"], marker='o', label=f"{points} points")
+            ax.set_xlabel("Down Payment %")
+            ax.set_ylabel("Total Monthly Payment $")
+            ax.set_title("Monthly Payment vs Down Payment %")
+            ax.legend(title="Discount Points")
+            ax.grid(True)
+            st.pyplot(fig)
 
-        # --- Data Table ---
-        st.subheader("📊 Scenario Results")
-        st.dataframe(df.style.format({
-            "Home Price $": "${:,.0f}",
-            "Down %": "{:.2f}%",
-            "Down $": "${:,.0f}",
-            "Loan Amount $": "${:,.0f}",
-            "Interest Rate %": "{:.2f}%",
-            "Closing Cost $": "${:,.2f}",
-            "PMI $": "${:.2f}",
-            "Total Cash Used $": "${:,.2f}",
-            "Monthly P&I $": "${:.2f}",
-            "Total Monthly $": "${:.2f}",
-            "DTI %": "{:.2f}%",
-        }), height=400)
-                # --- Line Chart ---
-        st.subheader("📈 Monthly Payment vs Down Payment % by Discount Points")
-        fig, ax = plt.subplots(figsize=(10, 5))
+            csv = df.to_csv(index=False).encode('utf-8')
+            st.download_button("⬇️ Download Scenarios as CSV", data=csv, file_name="mortgage_scenarios.csv", mime="text/csv")
 
-        for points in df["Discount Points"].unique():
-            subset = df[df["Discount Points"] == points]
-            ax.plot(subset["Down %"], subset["Total Monthly $"], marker='o', label=f"{points} points")
+            st.subheader("📘 How Calculations Work")
+            st.markdown("""
+            **How Monthly P&I is Calculated:**
 
-        ax.set_xlabel("Down Payment %")
-        ax.set_ylabel("Total Monthly Payment $")
-        ax.set_title("Monthly Payment vs Down Payment %")
-        ax.legend(title="Discount Points")
-        ax.grid(True)
-        st.pyplot(fig)
+            The **Principal & Interest (P&I)** part of your mortgage payment is calculated based on the following:
 
-        # --- Download button ---
-        csv = df.to_csv(index=False).encode('utf-8')
-        st.download_button(
-            label="⬇️ Download Scenarios as CSV",
-            data=csv,
-            file_name="mortgage_scenarios.csv",
-            mime="text/csv"
-        )
+            1. **Loan Amount** (P) = The total amount you're borrowing.
+            2. **Monthly Interest Rate** (r) = The annual interest rate divided by 12.
+            3. **Number of Payments** (n) = The number of months in your loan term (e.g., for a 30-year loan, it’s 360 months).
 
+            The formula is:
+
+            **Monthly P&I = (Loan Amount × Monthly Interest Rate × (1 + Monthly Interest Rate)^n) ÷ ((1 + Monthly Interest Rate)^n - 1)**
+
+            ### Example:
+            - Borrowing $200,000 at 5% for 30 years gives a monthly P&I of ~$1,073.
+
+            **Discount Points:**
+            - Each point equals 1% of your loan amount. More points = lower interest.
+
+            **Closing Costs:**
+            - Estimated as a percentage of the loan amount (based on discount points).
+
+            **DTI (Debt-to-Income Ratio):**
+            - DTI = (Total Monthly Payments + Monthly Liabilities) ÷ Monthly Income
+
+            **Total Monthly Payment:**
+            - Includes P&I, taxes, insurance, HOA, and PMI (if applicable).
+            """)
+
+        with tab2:
+            st.subheader("📈 Loan Analysis (30-Year Term)")
+            df_loan = loan_details_table(df.copy())
+            st.dataframe(df_loan.style.format("${:,.2f}"), height=500)
+            csv_loan = df_loan.to_csv(index=False).encode('utf-8')
+            st.download_button("⬇️ Download Loan Analysis CSV", data=csv_loan, file_name="loan_analysis.csv", mime="text/csv")
 
     else:
         st.warning("No valid scenarios found based on your input.")
-
-    # --- Explanation section ---
-    st.subheader("📘 How Calculations Work")
-    st.markdown("""
-    **How Monthly P&I is Calculated:**
-
-    The **Principal & Interest (P&I)** part of your mortgage payment is calculated based on the following:
-
-    1. **Loan Amount** (P) = The total amount you're borrowing.
-    2. **Monthly Interest Rate** (r) = The annual interest rate divided by 12.
-    3. **Number of Payments** (n) = The number of months in your loan term (e.g., for a 30-year loan, it’s 360 months).
-
-    The formula is:
-
-    **Monthly P&I = (Loan Amount × Monthly Interest Rate × (1 + Monthly Interest Rate)^n) ÷ ((1 + Monthly Interest Rate)^n - 1)**
-
-    ### Example:
-    - Borrowing $200,000 at 5% for 30 years gives a monthly P&I of ~$1,073.
-
-    **Discount Points:**
-    - Each point equals 1% of your loan amount. More points = lower interest.
-
-    **Closing Costs:**
-    - Estimated as a percentage of the loan amount (based on discount points).
-
-    **DTI (Debt-to-Income Ratio):**
-    - DTI = (Total Monthly Payments + Monthly Liabilities) ÷ Monthly Income
-
-    **Total Monthly Payment:**
-    - Includes P&I, taxes, insurance, HOA, and PMI (if applicable).
-    """)
 
 elif calculate:
     st.error("Please fill in all required fields: Home Price, Interest Rate, Annual Income, Max DTI.")
@@ -200,4 +221,3 @@ st.markdown("""
     <p><em>This tool is for informational purposes only and should not be considered financial advice.</em></p>
 </div>
 """, unsafe_allow_html=True)
-
