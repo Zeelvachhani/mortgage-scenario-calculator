@@ -281,7 +281,7 @@ if calculate and all(field is not None and field > 0 for field in required_field
                 }}
                 table {{
                     width: 100%;
-                    table-layout: fixed;
+                    table-layout: auto;
                     border-collapse: collapse;
                 }}
                 th {{
@@ -292,12 +292,14 @@ if calculate and all(field is not None and field > 0 for field in required_field
                     padding: 6px;
                     background-color: #f0f0f0;
                     border: 1px solid #ddd;
+                    min-width: 140px;
                 }}
                 td {{
                     text-align: center;
                     font-size: 13px;
                     padding: 6px;
                     border: 1px solid #eee;
+                    min-width: 140px;
                 }}
                 </style>
             """, unsafe_allow_html=True)
