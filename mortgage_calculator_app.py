@@ -9,14 +9,11 @@ st.set_page_config(page_title="Mortgage Scenario Dashboard", layout="wide")
 st.sidebar.title("🏠 Mortgage Parameters")
 st.sidebar.markdown("Fields marked with * are required.")
 
-def float_input(label, key, placeholder="", steep=1, required=False):
+def float_input(label, key, placeholder="", step=1.0, required=False):
     if required:
         label += " *"
-    val = st.sidebar.text_input(label, key=key, placeholder=placeholder)
-    try:
-        return float(val)
-    except:
-        return None
+    return st.sidebar.number_input(label, key=key, step=step, format="%.4f")
+
         
 # Required inputs with *
 home_price = float_input("Home Price $", "home_price", "e.g. 300000", steep=10000, required=True)
