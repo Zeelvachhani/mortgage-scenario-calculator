@@ -278,7 +278,7 @@ if calculate and all(field is not None and field > 0 for field in required_field
             
             # Build grid options with sorting, filtering, resizing enabled
             gb = GridOptionsBuilder.from_dataframe(df_loan.drop(columns=["Loan ID"]))
-            gb.configure_default_column(sortable=True, filter=True, resizable=True)
+            gb.configure_default_column(sortable=True, filter=True, resizable=True, min_width=100, header_class="header-wrap-center")
             
             # Increase header height (set to 60 pixels)
             gb.configure_grid_options(headerHeight=60)
