@@ -213,6 +213,32 @@ if calculate and all(field is not None and field > 0 for field in required_field
             csv_loan = df_loan.to_csv(index=False).encode('utf-8')
             st.download_button("⬇️ Download Loan Analysis CSV", data=csv_loan, file_name="loan_analysis.csv", mime="text/csv")
 
+
+            st.subheader("📊 Remaining Balance & Interest Paid")
+            time_years = [5, 10, 15, 20, 25, 30]
+            for i, row in df_loan.iterrows():
+                balance_data = [row[f"Remaining Balance end of Year {year} $"] for year in time_years]
+                interest_data = [row[f"Total Interest in {year} Years $"] for year in time_years]
+
+                fig, ax1 = plt.subplots(figsize=(10, 5))
+
+                ax1.set_xlabel('Years')
+                ax1.set_ylabel('Remaining Balance $', color='tab:blue')
+                ax1.plot(time_years, balance_data, marker='o', color='tab:blue', label='Remaining Balance')
+                ax1.tick_params(axis='y', labelcolor='tab:blue')
+
+                ax2 = ax1.twinx()
+                ax2.set_ylabel('Interest Paid $', color='tab:red')
+                ax2.plot(time_years, interest_data, marker='s', color='tab:red', label='Interest Paid')
+                ax2.tick_params(axis='y', labelcolor='tab:red')
+
+                fig.tight_layout()
+                st.pyplot(fig)
+
+            csv_loan = df_loan.to_csv(index=False).encode('utf-8')
+            st.download_button("⬇️ Download Loan Analysis CSV", data=csv_loan, file_name="loan_analysis.csv", mime="text/csv")
+
+
     else:
         st.warning("No valid scenarios found based on your input.")
 
