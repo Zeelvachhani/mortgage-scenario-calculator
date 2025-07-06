@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from datetime import datetime
 
 st.set_page_config(page_title="Mortgage Scenario Dashboard", layout="wide")
 
@@ -46,42 +45,37 @@ def calculate_monthly_payment(loan_amount, interest_rate, years):
         return loan_amount / n
     return loan_amount * r * (1 + r) ** n / ((1 + r) ** n - 1)
 
-# Amortization Schedule Calculation
-def amortization_schedule(loan_amt, rate, term_years):
-    r = rate / 12
-    n = term_years * 12
-    balance = loan_amt
-    schedule = []
-
-    for month in range(1, n + 1):
-        interest_payment = balance * r
-        principal_payment = calculate_monthly_payment(loan_amt, rate, term_years) - interest_payment
-        balance -= principal_payment
-        schedule.append({
-            'Month': month,
-            'Principal Payment $': round(principal_payment, 2),
-            'Interest Payment $': round(interest_payment, 2),
-            'Remaining Balance $': round(balance, 2)
-        })
-
-    return pd.DataFrame(schedule)
-
 def loan_details_table(df):
-    """Generate the loan details table with amortization info for each loan scenario."""
+    def interest_paid(loan, r, pmt, months):
+        balance = loan
+        interest = 0
+        for _ in range(months):
+            int_paid = balance * r
+            principal = pmt - int_paid
+            balance -= principal
+            interest += int_paid
+        return interest, balance
+
     records = []
-    for _, row in df.iterrows():
+    for i, row in df.iterrows():
         loan_amt = row["Loan Amount $"]
         rate = row["Interest Rate %"] / 100
-        # Use amortization schedule
-        schedule = amortization_schedule(loan_amt, rate, loan_term)
-        
-        # Store amortization data into the loan details table
-        for year in [5, 10, 15, 20, 25, 30]:
-            remaining_balance = schedule[schedule['Month'] == year * 12]['Remaining Balance $'].values[0]
-            total_interest_paid = schedule[schedule['Month'] == year * 12]['Interest Payment $'].sum()
-            row[f"Remaining Balance end of Year {year} $"] = remaining_balance
-            row[f"Total Interest in Year {year} $"] = total_interest_paid
+        pmt = calculate_monthly_payment(loan_amt, rate, 30)
+        pmi = row["PMI $"]
+        total_pmt = pmt + pmi
 
+        r = rate / 12
+
+        for year in [5, 10, 15]:
+            int_paid, rem_bal = interest_paid(loan_amt, r, pmt, year * 12)
+            row[f"Total Payment in {year} Years (includes PMI if applicable) $"] = round(total_pmt * 12 * year)
+            row[f"Total Interest in {year} Years $"] = round(int_paid)
+            row[f"Remaining Balance end of Year {year} $"] = round(rem_bal)
+
+        total_int, _ = interest_paid(loan_amt, r, pmt, 30 * 12)
+        row["Total Payment (includes PMI if applicable) $"] = round(total_pmt * 360)
+        row["Total Interest $"] = round(total_int)
+        row["Loan ID"] = f"Loan {i+1}"
         records.append(row)
 
     return pd.DataFrame(records)
@@ -178,48 +172,43 @@ if calculate and all(field is not None and field > 0 for field in required_field
             csv = df.to_csv(index=False).encode('utf-8')
             st.download_button("⬇️ Download Scenarios as CSV", data=csv, file_name="mortgage_scenarios.csv", mime="text/csv")
 
+            st.subheader("📘 How Calculations Work")
+            st.markdown("""
+            **How Monthly P&I is Calculated:**
+
+            The **Principal & Interest (P&I)** part of your mortgage payment is calculated based on the following:
+
+            1. **Loan Amount** (P) = The total amount you're borrowing.
+            2. **Monthly Interest Rate** (r) = The annual interest rate divided by 12.
+            3. **Number of Payments** (n) = The number of months in your loan term (e.g., for a 30-year loan, it’s 360 months).
+
+            The formula is:
+
+            **Monthly P&I = (Loan Amount × Monthly Interest Rate × (1 + Monthly Interest Rate)^n) ÷ ((1 + Monthly Interest Rate)^n - 1)**
+
+            ### Example:
+            - Borrowing $200,000 at 5% for 30 years gives a monthly P&I of ~$1,073.
+
+            **Discount Points:**
+            - Each point equals 1% of your loan amount. More points = lower interest.
+
+            **Closing Costs:**
+            - Estimated as a percentage of the loan amount (based on discount points).
+
+            **DTI (Debt-to-Income Ratio):**
+            - DTI = (Total Monthly Payments + Monthly Liabilities) ÷ Monthly Income
+
+            **Total Monthly Payment:**
+            - Includes P&I, taxes, insurance, HOA, and PMI (if applicable).
+            """)
+
         with tab2:
             st.subheader("📈 Loan Analysis (30-Year Term)")
             df_loan = loan_details_table(df.copy())
             numeric_cols = df_loan.select_dtypes(include='number').columns
             int_cols = [col for col in numeric_cols if 'Interest' in col or 'Payment' in col or 'Balance' in col or col in ["Home Price $", "Down $", "Loan Amount $", "Discount Points", "Closing Cost $", "Total Cash Used $"]]
             fmt = {col: "${:,.0f}" for col in int_cols}
-
-            # Generate amortization table for hidden use
-            amortization_data = []
-            for _, row in df_loan.iterrows():
-                loan_amt = row["Loan Amount $"]
-                rate = row["Interest Rate %"] / 100
-                schedule = amortization_schedule(loan_amt, rate, loan_term)
-
-                # Store this hidden amortization data
-                amortization_data.append(schedule)
-
-            # Hidden data, will not be displayed
-            st.empty()  # Hides the table for amortization
-
-            # --- Remaining Balance vs Interest Paid chart ---
-            st.subheader("📊 Remaining Balance & Interest Paid")
-            time_years = [5, 10, 15, 20, 25, 30]
-            for i, row in df_loan.iterrows():
-                balance_data = [row[f"Remaining Balance end of Year {year} $"] for year in time_years]
-                interest_data = [row[f"Total Interest in Year {year} $"] for year in time_years]
-
-                fig, ax1 = plt.subplots(figsize=(10, 5))
-
-                ax1.set_xlabel('Years')
-                ax1.set_ylabel('Remaining Balance $', color='tab:blue')
-                ax1.plot(time_years, balance_data, marker='o', color='tab:blue', label='Remaining Balance')
-                ax1.tick_params(axis='y', labelcolor='tab:blue')
-
-                ax2 = ax1.twinx()
-                ax2.set_ylabel('Interest Paid $', color='tab:red')
-                ax2.plot(time_years, interest_data, marker='s', color='tab:red', label='Interest Paid')
-                ax2.tick_params(axis='y', labelcolor='tab:red')
-
-                fig.tight_layout()
-                st.pyplot(fig)
-
+            st.dataframe(df_loan.style.format(fmt).set_properties(**{'text-align': 'center'}), height=500 if len(df_loan) > 12 else None)
             csv_loan = df_loan.to_csv(index=False).encode('utf-8')
             st.download_button("⬇️ Download Loan Analysis CSV", data=csv_loan, file_name="loan_analysis.csv", mime="text/csv")
 
