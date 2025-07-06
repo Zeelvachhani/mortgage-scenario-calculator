@@ -25,12 +25,13 @@ property_tax_rate = float_input("Property Tax %", "tax", "e.g. 1.2", required=Tr
 insurance_rate = float_input("Insurance %", "insurance", "e.g. 0.5", required=True)
 pmi_rate = float_input("PMI %", "pmi", "e.g. 0.5", required=True)
 interest_rate_base = float_input("Interest Rate %", "rate", "e.g. 5", required=True)
+loan_term = st.sidebar.number_input("Loan Term (Years) *", min_value=1, max_value=40, value=30)
 
 cash_available = float_input("Cash Available $", "cash", "e.g. 80000", required=True)
 monthly_liability = float_input("Monthly Liability $", "liability", "e.g. 500", required=True)
 annual_income = float_input("Annual Income $", "income", "e.g. 85000", required=True)
 max_dti = float_input("Max DTI %", "dti", "e.g. 36", required=True)
-loan_term = st.sidebar.number_input("Loan Term (Years) *", min_value=1, max_value=40, value=30)
+
 
 # Optional inputs (no *)
 min_down_pct = float_input("Min Down Payment %", "min_dp", "e.g. 5")
