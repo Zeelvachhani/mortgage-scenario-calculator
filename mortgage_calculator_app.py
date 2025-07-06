@@ -236,6 +236,7 @@ if calculate and all(field is not None and field > 0 for field in required_field
         with tab2:
             st.subheader("📈 Loan Analysis (30-Year Term)")
             df_loan = loan_details_table(df.copy())
+            df_loan.index = range(1, len(df_loan) + 1)  # Set index starting from 1
             numeric_cols = df_loan.select_dtypes(include='number').columns
             int_cols = [col for col in numeric_cols if 'Interest' in col or 'Payment' in col or 'Balance' in col or col in ["Home Price $", "Down $", "Loan Amount $", "Discount Points", "Closing Cost $", "Total Cash Used $"]]
             fmt = {}
@@ -244,12 +245,18 @@ if calculate and all(field is not None and field > 0 for field in required_field
                     fmt[col] = "${:,.2f}"
                 elif col in ["Down %", "Interest Rate %", "DTI %"]:
                     fmt[col] = "{:,.2f}%"
-                elif col in ["Home Price $", "Loan Amount $", "Down $", "Closing Cost $", "Total Cash Used $", 
+                elif col in ["Home Price $", "Loan Amount $", "Down $", "Discount Points", "Closing Cost $", "Total Cash Used $", 
                              "Total Payment (includes PMI if applicable) $", "Total Interest $"] or \
                      "Payment" in col or "Interest" in col or "Balance" in col:
                     fmt[col] = "${:,.0f}"
 
-            st.dataframe(df_loan.style.format(fmt).set_properties(**{'text-align': 'center'}), height=500 if len(df_loan) > 12 else None)
+            st.dataframe(
+                df_loan.drop(columns=["Loan ID"]).style
+                .format(fmt)
+                .set_properties(**{'text-align': 'center'}),
+                height=500 if len(df_loan) > 12 else None
+             )
+           
             csv_loan = df_loan.to_csv(index=False).encode('utf-8')
             st.download_button("⬇️ Download Loan Analysis CSV", data=csv_loan, file_name="loan_analysis.csv", mime="text/csv")
 
