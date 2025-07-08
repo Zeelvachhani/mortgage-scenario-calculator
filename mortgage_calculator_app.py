@@ -18,6 +18,7 @@ def float_input(label, key, placeholder="", required=False):
     try:
         return float(val)
     except:
+        label += " (Optional)"
         return None
 
 
