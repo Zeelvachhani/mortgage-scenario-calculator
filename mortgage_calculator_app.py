@@ -16,7 +16,7 @@ def float_input(label, key, placeholder="", required=False):
         # Use Streamlit's native markdown formatting
         label += " *"
     else:
-        label = " (Optional)"
+        label += " (Optional)"
     
     val = st.sidebar.text_input(label, key=key, placeholder=placeholder)
     
