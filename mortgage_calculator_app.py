@@ -14,9 +14,9 @@ st.sidebar.markdown("Fields marked with * are required.")
 def float_input(label, key, placeholder="", required=False):
     if required:
         # Use Streamlit's native markdown formatting
-        label = f"**{label}** *"  # Bold label with plain asterisk
+        label += " *"
     else:
-        label = f"{label} (Optional)"
+        label = " (Optional)"
     
     val = st.sidebar.text_input(label, key=key, placeholder=placeholder)
     
