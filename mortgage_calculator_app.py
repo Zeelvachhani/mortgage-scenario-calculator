@@ -12,7 +12,8 @@ st.sidebar.markdown("Fields marked with * are required.")
 
 def float_input(label, key, placeholder="", required=False):
     if required:
-        label += " *" " <span style='color:red;font-size:1.2em;'>*</span>"
+        # Single-line HTML styling - works in Streamlit's text_input
+        label += " <span style='color:red;font-size:1.2em;'>*</span>"
     val = st.sidebar.text_input(label, key=key, placeholder=placeholder)
     try:
         return float(val)
