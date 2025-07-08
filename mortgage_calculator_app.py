@@ -10,22 +10,24 @@ st.set_page_config(page_title="Mortgage Scenario Dashboard", layout="wide")
 st.sidebar.title("🏠 Mortgage Parameters")
 st.sidebar.markdown("Fields marked with * are required.")
 
+
+Is it correct?
+
 def float_input(label, key, placeholder="", required=False):
     if required:
-        # For required fields: Show red asterisk using HTML styling in a separate markdown
-        st.sidebar.markdown(f"{label} <span style='color:red;font-size:1.1em;'>*</span>", 
-                          unsafe_allow_html=True)
-        val = st.sidebar.text_input("", key=key, placeholder=placeholder)  # Empty label here
+        # Single-line HTML styling - works in Streamlit's text_input
+        label = f"**{label}** *"  # Bold label with plain asterisk
+    val = st.sidebar.text_input(label, key=key, placeholder=placeholder)
     else:
         # For optional fields: Show label with (Optional) suffix
-        val = st.sidebar.text_input(f"{label} (Optional)", key=key, placeholder=placeholder)
-    
+        label = f"{label} (Optional)"
+
+    val = st.sidebar.text_input(label, key=key, placeholder=placeholder)
+        
     try:
-        return float(val) if val else None  # Return None for empty input
-    except ValueError:
-        return None  # Return None if conversion fails
-
-
+        return float(val)
+    except:
+        return None
 
 
 # Required inputs with *
