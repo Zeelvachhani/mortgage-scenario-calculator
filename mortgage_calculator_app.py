@@ -11,8 +11,6 @@ st.sidebar.title("🏠 Mortgage Parameters")
 st.sidebar.markdown("Fields marked with * are required.")
 
 
-Is it correct?
-
 def float_input(label, key, placeholder="", required=False):
     if required:
         # Single-line HTML styling - works in Streamlit's text_input
