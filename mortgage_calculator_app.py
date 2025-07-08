@@ -32,9 +32,12 @@ st.sidebar.markdown("""
 """, unsafe_allow_html=True)
 def float_input(label, key, placeholder="", required=False):
     if required:
-        label += " <span class='required-asterisk'>*</span>"  # Add styled asterisk
+        label_with_asterisk = f"{label} <span class='required-asterisk'>*</span>"
+        st.sidebar.markdown(label_with_asterisk, unsafe_allow_html=True)  # Render label with asterisk
+    else:
+        st.sidebar.markdown(label)  # Render label without asterisk
     
-    val = st.sidebar.text_input(label, key=key, placeholder=placeholder)
+    val = st.sidebar.text_input("", key=key, placeholder=placeholder)  # Input field without label
     try:
         return float(val)
     except:
