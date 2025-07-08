@@ -12,14 +12,19 @@ st.sidebar.markdown("Fields marked with * are required.")
 
 def float_input(label, key, placeholder="", required=False):
     if required:
-        # Single-line HTML styling - works in Streamlit's text_input
-        label += " *"
-    val = st.sidebar.text_input(label, key=key, placeholder=placeholder)
+        # For required fields: Show red asterisk using HTML styling in a separate markdown
+        st.sidebar.markdown(f"{label} <span style='color:red;font-size:1.1em;'>*</span>", 
+                          unsafe_allow_html=True)
+        val = st.sidebar.text_input("", key=key, placeholder=placeholder)  # Empty label here
+    else:
+        # For optional fields: Show label with (Optional) suffix
+        val = st.sidebar.text_input(f"{label} (Optional)", key=key, placeholder=placeholder)
+    
     try:
-        return float(val)
-    except:
-        label += " (Optional)"
-        return None
+        return float(val) if val else None  # Return None for empty input
+    except ValueError:
+        return None  # Return None if conversion fails
+
 
 
 
