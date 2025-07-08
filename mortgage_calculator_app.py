@@ -42,7 +42,7 @@ max_dti = float_input("Max DTI %", "dti", "e.g. 36", required=True)
 
 
 # Optional inputs (no *)
-min_down_pct = float_input("Min Down Payment %", "min_dp", "e.g. 5", default=3.0)
+min_down_pct = float_input("Min Down Payment %", "min_dp", "e.g. 5", 3)
 max_down_pct = float_input("Max Down Payment %", "max_dp", "e.g. 20")
 max_monthly_expense = float_input("Max Monthly Expense $", "max_exp", "e.g. 2200")
 
