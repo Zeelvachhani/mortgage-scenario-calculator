@@ -37,7 +37,10 @@ def float_input(label, key, placeholder="", required=False):
     else:
         st.sidebar.markdown(label)  # Render label without asterisk
     
-    val = st.sidebar.text_input("", key=key, placeholder=placeholder)  # Input field without label
+    # Create a placeholder for the input field
+    input_placeholder = st.sidebar.empty()
+    val = input_placeholder.text_input("", key=key, placeholder=placeholder)  # Input field without label
+    
     try:
         return float(val)
     except:
