@@ -10,30 +10,16 @@ st.set_page_config(page_title="Mortgage Scenario Dashboard", layout="wide")
 st.sidebar.title("🏠 Mortgage Parameters")
 st.sidebar.markdown("Fields marked with * are required.")
 
-# def float_input(label, key, placeholder="", required=False):
-#     if required:
-#         # Single-line HTML styling - works in Streamlit's text_input
-#         label += " *"
-#     val = st.sidebar.text_input(label, key=key, placeholder=placeholder)
-#     try:
-#         return float(val)
-#     except:
-#         return None
-
-
 def float_input(label, key, placeholder="", required=False):
     if required:
-        # Use markdown to render the label with HTML styling
-        st.markdown(f"{label} <span style='color:red;font-size:1.2em;'>*</span>", unsafe_allow_html=True)
-        # Empty string for the text_input label since we rendered it above
-        val = st.text_input("", key=key, placeholder=placeholder)
-    else:
-        val = st.text_input(label, key=key, placeholder=placeholder)
-    
+        # Single-line HTML styling - works in Streamlit's text_input
+        label += " *"
+    val = st.sidebar.text_input(label, key=key, placeholder=placeholder)
     try:
         return float(val)
     except:
         return None
+
 
 
 # Required inputs with *
