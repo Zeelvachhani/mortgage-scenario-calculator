@@ -10,37 +10,10 @@ st.set_page_config(page_title="Mortgage Scenario Dashboard", layout="wide")
 st.sidebar.title("🏠 Mortgage Parameters")
 st.sidebar.markdown("Fields marked with * are required.")
 
-# def float_input(label, key, placeholder="", required=False):
-#     if required:
-#         label += " *"
-#     val = st.sidebar.text_input(label, key=key, placeholder=placeholder)
-#     try:
-#         return float(val)
-#     except:
-#         return None
-
-
-# Add CSS to the sidebar for styling the asterisk
-st.sidebar.markdown("""
-    <style>
-        .required-asterisk {
-            color: red;  /* Change color */
-            font-size: 1.2em;  /* Increase size */
-            font-weight: bold;  /* Make it bold */
-        }
-    </style>
-""", unsafe_allow_html=True)
 def float_input(label, key, placeholder="", required=False):
     if required:
-        label_with_asterisk = f"{label} <span class='required-asterisk'>*</span>"
-        st.sidebar.markdown(label_with_asterisk, unsafe_allow_html=True)  # Render label with asterisk
-    else:
-        st.sidebar.markdown(label)  # Render label without asterisk
-    
-    # Create a placeholder for the input field
-    input_placeholder = st.sidebar.empty()
-    val = input_placeholder.text_input("", key=key, placeholder=placeholder)  # Input field without label
-    
+        label += " *" " <span style='color:red;font-size:1.2em;'>*</span>"
+    val = st.sidebar.text_input(label, key=key, placeholder=placeholder)
     try:
         return float(val)
     except:
