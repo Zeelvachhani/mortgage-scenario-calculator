@@ -10,9 +10,30 @@ st.set_page_config(page_title="Mortgage Scenario Dashboard", layout="wide")
 st.sidebar.title("🏠 Mortgage Parameters")
 st.sidebar.markdown("Fields marked with * are required.")
 
+# def float_input(label, key, placeholder="", required=False):
+#     if required:
+#         label += " *"
+#     val = st.sidebar.text_input(label, key=key, placeholder=placeholder)
+#     try:
+#         return float(val)
+#     except:
+#         return None
+
+
+# Add CSS to the sidebar for styling the asterisk
+st.sidebar.markdown("""
+    <style>
+        .required-asterisk {
+            color: red;  /* Change color */
+            font-size: 1.2em;  /* Increase size */
+            font-weight: bold;  /* Make it bold */
+        }
+    </style>
+""", unsafe_allow_html=True)
 def float_input(label, key, placeholder="", required=False):
     if required:
-        label += " *"
+        label += " <span class='required-asterisk'>*</span>"  # Add styled asterisk
+    
     val = st.sidebar.text_input(label, key=key, placeholder=placeholder)
     try:
         return float(val)
