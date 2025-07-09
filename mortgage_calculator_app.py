@@ -42,7 +42,7 @@ max_dti = float_input("Max DTI %", "dti", "e.g. 36", required=True)
 
 
 # Optional inputs (no *)
-min_down_pct = st.sidebar.text_input("Min Down Payment % (Optional)", "min_dp", value=30)
+min_down_pct = st.sidebar.text_input("Min Down Payment % (Optional)", "min_dp", value="3")
 max_down_pct = float_input("Max Down Payment %", "max_dp", "e.g. 20")
 max_monthly_expense = float_input("Max Monthly Expense $", "max_exp", "e.g. 2200")
 
