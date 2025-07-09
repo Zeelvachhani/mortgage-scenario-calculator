@@ -538,11 +538,29 @@ elif calculate:
     st.error("Please fill in all required fields: Home Price, Interest Rate, Annual Income, Max DTI, Cash Available.")
 
 # --- Footer ---
-st.markdown("---")
-st.markdown("""
-<div style="text-align: center; font-size: 14px;">
-    <p>✨ Crafted with care by <strong>Zeel Vachhani</strong> ✨</p>
-    <p>© 2025 Zeel Vachhani. All rights reserved.</p>
-    <p><em>This tool is for informational purposes only and should not be considered financial advice.</em></p>
-</div>
-""", unsafe_allow_html=True)
+st.markdown("---", unsafe_allow_html=True)
+st.markdown(
+    """
+    <div style="text-align: center; font-size: 14px;">
+        ✨ Crafted with care by <strong>Zeel Vachhani</strong> ✨<br>
+        <a href="https://www.linkedin.com/in/zeelvachhani" target="_blank" style="text-decoration: none;">
+            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/linkedin/linkedin-original.svg" height="18" style="vertical-align: text-bottom; margin-right: 6px;">
+            Connect on LinkedIn
+        </a>
+        <br>
+        © 2025 Zeel Vachhani. All rights reserved.<br>
+        <em>This tool is for informational purposes only and should not be considered financial advice.</em>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+
+# st.markdown("---")
+# st.markdown("""
+# <div style="text-align: center; font-size: 14px;">
+#     <p>✨ Crafted with care by <strong>Zeel Vachhani</strong> ✨</p>
+#     <p>© 2025 Zeel Vachhani. All rights reserved.</p>
+#     <p><em>This tool is for informational purposes only and should not be considered financial advice.</em></p>
+# </div>
+# """, unsafe_allow_html=True)
