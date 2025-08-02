@@ -1,8 +1,21 @@
+
 import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from st_aggrid import AgGrid, GridOptionsBuilder
+
+st.markdown(
+    """
+    <style>
+    /* Change the width of the sidebar */
+    .css-1d391kg {
+        width: 5000px;  /* Adjust this value to increase/decrease width */
+    }
+    </style>
+    """, 
+    unsafe_allow_html=True
+)
 
 st.set_page_config(page_title="Mortgage Scenario Dashboard", layout="wide")
 
@@ -32,8 +45,8 @@ hoa = float_input("HOA $", "hoa", "e.g. 250", required=True)
 property_tax_rate = float_input("Property Tax %", "tax", "e.g. 1.2", required=True)
 insurance_rate = float_input("Insurance %", "insurance", "e.g. 0.5", required=True)
 pmi_rate = float_input("PMI %", "pmi", "e.g. 0.5", required=True)
-interest_rate_base = float_input("Interest Rate %", "rate", "e.g. 5", required=True)
-loan_term = st.sidebar.number_input("Loan Term (Years) *", min_value=1, max_value=40, value=30)
+interest_rate_base = float_input("Interest Rate %", "rate", "e.g. 6", required=True)
+loan_term = st.sidebar.number_input("Loan Term (Years) *", min_value=1, max_value=30, value=30)
 
 cash_available = float_input("Cash Available $", "cash", "e.g. 80000", required=True)
 monthly_liability = float_input("Monthly Liability $", "liability", "e.g. 500", required=True)
@@ -42,9 +55,18 @@ max_dti = float_input("Max DTI %", "dti", "e.g. 36", required=True)
 
 
 # Optional inputs (no *)
-min_down_pct = st.sidebar.number_input("Min Down Payment % (Optional)", min_value=0.0, max_value=100.0, value=3.0, format="%.2f")
+min_down_pct = st.sidebar.number_input("Min Down Payment % (Optional)", min_value=0.0, max_value=100.0, value=5.0, format="%.2f")
 max_down_pct = float_input("Max Down Payment %", "max_dp", "e.g. 20")
 max_monthly_expense = float_input("Max Monthly Expense $", "max_exp", "e.g. 2200")
+
+# --- New Input: Max Discount Points ---
+max_discount_points = st.sidebar.number_input(
+    "Max Discount Points (Optional)",
+    min_value=0, 
+    max_value=20, # Assuming 20 is a reasonable upper limit for points
+    value=7, # Default to 20 to include all points if not specified
+    help="Maximum number of discount points you are willing to purchase (each point reduces interest rate by 0.25%)."
+)
 
 calculate = st.sidebar.button("🔄 Calculate Scenarios")
 
@@ -129,43 +151,6 @@ def loan_details_table(df):
 
     return pd.DataFrame(records)
 
-
-
-# def loan_details_table(df):
-#     def interest_paid(loan, r, pmt, months):
-#         balance = loan
-#         interest = 0
-#         for _ in range(months):
-#             int_paid = balance * r
-#             principal = pmt - int_paid
-#             balance -= principal
-#             interest += int_paid
-#         return interest, balance
-
-#     records = []
-#     for i, row in df.iterrows():
-#         loan_amt = row["Loan Amount $"]
-#         rate = row["Interest Rate %"] / 100
-#         pmt = calculate_monthly_payment(loan_amt, rate, 30)
-#         pmi = row["PMI $"]
-#         total_pmt = pmt + pmi
-
-#         r = rate / 12
-
-#         for year in [5, 10, 15]:
-#             int_paid, rem_bal = interest_paid(loan_amt, r, pmt, year * 12)
-#             row[f"Total Payment in {year} Years (includes PMI if applicable) $"] = round(total_pmt * 12 * year)
-#             row[f"Total Interest in {year} Years $"] = round(int_paid)
-#             row[f"Remaining Balance end of Year {year} $"] = round(rem_bal)
-
-#         total_int, _ = interest_paid(loan_amt, r, pmt, 30 * 12)
-#         row["Total Payment (includes PMI if applicable) $"] = round(total_pmt * 360)
-#         row["Total Interest $"] = round(total_int)
-#         row["Loan ID"] = f"Loan {i+1}"
-#         records.append(row)
-
-#     return pd.DataFrame(records)
-
 # --- Amortization Schedule Function ---
 def amortization_schedule(loan_amount, interest_rate, loan_term):
     """Generate amortization schedule for a given loan."""
@@ -183,7 +168,7 @@ def amortization_schedule(loan_amount, interest_rate, loan_term):
             balance -= principal_payment
             total_interest_paid += interest_payment
             total_principal_paid += principal_payment
-        
+            
         amortization_data.append({
             "Year": year,
             "Total Principal Paid $": total_principal_paid,
@@ -210,7 +195,8 @@ if calculate and all(field is not None and field > 0 for field in required_field
 
     results = []
 
-    for points in range(0, 20):
+    # Iterate from 0 up to and including max_discount_points
+    for points in range(0, int(max_discount_points) + 1):
         discount = points * 0.0025
         adjusted_rate = interest_rate_base / 100 - discount
 
@@ -249,7 +235,7 @@ if calculate and all(field is not None and field > 0 for field in required_field
     if results:
         df = pd.DataFrame(results).reset_index(drop=True)
         df.index += 1
-     
+    
         with tab1:
             st.subheader("📊 Scenario Results")
 
@@ -306,7 +292,7 @@ if calculate and all(field is not None and field > 0 for field in required_field
             The monthly **Principal & Interest (P&I)** payment is calculated using the standard amortization formula:
 
             Monthly Payment = (P × r × (1 + r)^n) / ((1 + r)^n - 1)
-                       
+                                
             Where:
             - **P** = Loan Amount  
             - **r** = Monthly Interest Rate (Annual Rate ÷ 12)  
@@ -338,18 +324,14 @@ if calculate and all(field is not None and field > 0 for field in required_field
             
             #### 📊 Debt-to-Income Ratio (DTI)
             - The **DTI ratio** is a key factor in mortgage qualification.
-            - **Formula:**  
-                - **DTI = (Total Monthly Housing Costs + Monthly Liabilities) / Monthly Gross Income**
+            - **Formula:** - **DTI = (Total Monthly Housing Costs + Monthly Liabilities) / Monthly Gross Income**
             - A lower DTI indicates a more favorable financial position.
             - Many lenders prefer a DTI of **36% or less**.
             
             ---
             
             #### 💸 Total Monthly Payment Includes:
-            - **Principal & Interest (P&I)**  
-            - **Property Taxes**  
-            - **Homeowner’s Insurance**  
-            - **HOA Fees** (if applicable)  
+            - **Principal & Interest (P&I)** - **Property Taxes** - **Homeowner’s Insurance** - **HOA Fees** (if applicable)  
             - **PMI (Private Mortgage Insurance)** — applies when the down payment is less than 20%
             """)
             
@@ -390,13 +372,13 @@ if calculate and all(field is not None and field > 0 for field in required_field
             int_cols = [col for col in numeric_cols if 'Interest' in col or 'Payment' in col or 'Balance' in col or col in ["Home Price $", "Down $", "Loan Amount $", "Discount Points", "Closing Cost $", "Total Cash Used $", "Total PMI Paid $"]]
             fmt = {}
             for col in df_loan.columns:
-                if col in ["PMI $", "Monthly P&I $", "Total Monthly $"]:
+                if col in ["PMI $", "Monthly P&I $", "Total Monthly $", "Total PMI Paid $"]:
                     fmt[col] = "${:,.2f}"
                 elif col in ["Down %", "Interest Rate %", "DTI %"]:
                     fmt[col] = "{:,.2f}%"
                 elif col in ["Home Price $", "Loan Amount $", "Down $", "Closing Cost $", "Total Cash Used $", 
-                             "Total Payment (includes PMI if applicable) $", "Total Interest $"] or \
-                             "Payment" in col or "Interest" in col or "Balance" in col:
+                                "Total Payment (includes PMI if applicable) $", "Total Interest $"] or \
+                                "Payment" in col or "Interest" in col or "Balance" in col:
                     fmt[col] = "${:,.0f}"
                 elif col in ["Discount Points", "PMI Months"]:
                     fmt[col] = "{:,.0f}"
@@ -405,82 +387,13 @@ if calculate and all(field is not None and field > 0 for field in required_field
             max_height = "600px" if len(df_loan) > 15 else "auto"
 
 
-
-            df_loan = loan_details_table(df.copy())
-            df_loan.index = range(1, len(df_loan) + 1)  # Set index starting from 1
-            
-            # Build grid options with sorting, filtering, resizing enabled
-            # gb = GridOptionsBuilder.from_dataframe(df_loan.drop(columns=["Loan ID"]))
-            # gb.configure_default_column(sortable=True, filter=True, resizable=True, min_width=250, header_class="header-wrap-center")
-            
-            # # Increase header height (set to 60 pixels)
-            # gb.configure_grid_options(headerHeight=60)
-            
-            # gridOptions = gb.build()
-            
-            # AgGrid(
-            #     df_loan.drop(columns=["Loan ID"]),
-            #     gridOptions=gridOptions,
-            #     enable_enterprise_modules=False,
-            #     height=500 if len(df_loan) > 12 else None,
-            #     fit_columns_on_grid_load=True,
-            # )
-            
-           
-
             st.dataframe(
                 df_loan.drop(columns=["Loan ID"]).style
                 .format(fmt)
                 .set_properties(**{'text-align': 'center'}),
                 height=500 if len(df_loan) > 12 else None
              )
-           
             
-            # Inject scrollable container and wrapped headers
-            # st.markdown(f"""
-            #     <style>
-            #     .scroll-table-container {{
-            #         max-height: {max_height};
-            #         overflow-y: auto;
-            #         border: 1px solid #ccc;
-            #         padding: 0;
-            #     }}
-            #     table {{
-            #         width: 100%;
-            #         table-layout: auto;
-            #         border-collapse: collapse;
-            #     }}
-            #     th {{
-            #         word-wrap: break-word;
-            #         white-space: normal;
-            #         text-align: center !important; 
-            #         vertical-align: middle !important;
-            #         font-size: 13px;
-            #         padding: 6px;
-            #         background-color: #f0f0f0;
-            #         border: 1px solid #ddd;
-            #         min-width: 140px;
-            #     }}
-            #     td {{
-            #         text-align: center;
-            #         font-size: 13px;
-            #         padding: 6px;
-            #         border: 1px solid #eee;
-            #         min-width: 140px;
-            #     }}
-            #     </style>
-            # """, unsafe_allow_html=True)
-            
-            # Format your DataFrame
-            # styled_df = df_loan.drop(columns=["Loan ID"]).copy()
-            # for col, f in fmt.items():
-            #     if col in styled_df.columns:
-            #         styled_df[col] = styled_df[col].map(lambda x: f.format(x) if pd.notnull(x) else "")
-            
-            # # Show the table in a scrollable container
-            # st.markdown(f'<div class="scroll-table-container">{styled_df.to_html(index=True, escape=False)}</div>', unsafe_allow_html=True)
-
-           
             csv_loan = df_loan.to_csv(index=False).encode('utf-8')
             st.download_button("⬇️ Download Loan Analysis CSV", data=csv_loan, file_name="loan_analysis.csv", mime="text/csv")
 
@@ -494,12 +407,17 @@ if calculate and all(field is not None and field > 0 for field in required_field
                 rate = row["Interest Rate %"] / 100
                 yearly_schedule = amortization_schedule(loan_amt, rate, loan_term)
                 for year_data in yearly_schedule:
+                    # Retrieve the specific down_payment and pmi for the current row's scenario
+                    # It's better to get these directly from the 'row' object as they are specific to each scenario.
+                    current_down_payment = row["Down $"] 
+                    current_pmi = row["PMI $"]
+                    
                     amortization_data.append({
                         "Loan ID": i,  # Numeric Loan ID
                         "Home Price $": round(home_price),  # Home Price formatted to 0 decimal places
                         "Loan Amount $": round(loan_amt),  # Loan Amount formatted to 0 decimal places
-                        "Down Payment $": round(down_payment),  # Down Payment formatted to 0 decimal places
-                        "PMI $": round(pmi, 2),  # PMI formatted to 2 decimal places
+                        "Down Payment $": round(current_down_payment),  # Down Payment formatted to 0 decimal places
+                        "PMI $": round(current_pmi, 2),  # PMI formatted to 2 decimal places
                         "Year": year_data["Year"],
                         "Total Principal Paid $": year_data["Total Principal Paid $"],
                         "Total Interest Paid $": year_data["Total Interest Paid $"],
@@ -552,13 +470,3 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-
-
-# st.markdown("---")
-# st.markdown("""
-# <div style="text-align: center; font-size: 14px;">
-#     <p>✨ Crafted with care by <strong>Zeel Vachhani</strong> ✨</p>
-#     <p>© 2025 Zeel Vachhani. All rights reserved.</p>
-#     <p><em>This tool is for informational purposes only and should not be considered financial advice.</em></p>
-# </div>
-# """, unsafe_allow_html=True)
