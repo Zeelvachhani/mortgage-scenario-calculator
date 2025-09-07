@@ -391,7 +391,7 @@ if calculate and all(field is not None and field > 0 for field in required_field
                 df_loan.drop(columns=["Loan ID"]).style
                 .format(fmt)
                 .set_properties(**{'text-align': 'center'}),
-                height=500 if len(df_loan) > 12 else None
+                height=500 if len(df_loan) > 12 else 'auto'
              )
             
             csv_loan = df_loan.to_csv(index=False).encode('utf-8')
@@ -470,5 +470,6 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
