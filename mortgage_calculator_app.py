@@ -267,7 +267,7 @@ if calculate and all(field is not None and field > 0 for field in required_field
                     "Total Monthly $": "${:.2f}",
                     "DTI %": "{:.2f}%"
                 }).set_properties(**{'text-align': 'center'}),
-                height=500 if len(df) > 12 else None
+                height=500 if len(df) > 12 else 'auto'
             )
 
             st.subheader("📈 Monthly Payment vs Down Payment % by Discount Points")
@@ -470,4 +470,5 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
